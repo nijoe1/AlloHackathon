@@ -12,6 +12,16 @@ import {
   InputGroup,
   InputRightAddon,
 } from "@chakra-ui/react";
+
+import { getProfileHats } from "@/utils/graphFunctions";
+
+import { encodePacked } from "viem";
+
+import {
+  getAllProfilesAdminHat,
+  getAllPoolsCreatedByProfile,
+  getAllPoolsRegisteredByProfile,
+} from "@/utils/tableland";
 import { FaEthereum } from "react-icons/fa";
 import { useToast } from "@chakra-ui/react";
 import { Avatar, Wrap, WrapItem } from "@chakra-ui/react";
@@ -25,15 +35,8 @@ import { FaTwitter } from "react-icons/fa6";
 import { MdOutlineAttachFile } from "react-icons/md";
 import { IoIosMail } from "react-icons/io";
 import { Code } from "@chakra-ui/react";
-import {
-  useAccount,
-  usePublicClient,
-  useWalletClient,
-} from "wagmi";
-import { CONTRACT_ABI, CONTRACT_ADDRESSES } from "@/constants/contracts";
+import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 
-import { parseEther } from "ethers";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Navbar from "@/components/navbar";
 const Create = () => {
   // const chainID = useChainId();
@@ -61,6 +64,40 @@ const Create = () => {
     agentCategory: "",
     agentImage: undefined,
   });
+
+  const get = async () => {
+    // console.log(
+    //   (
+    //     await getAllPoolsCreatedByProfile(
+    //       "0x33bb7a6647db8acad7e60a7dff816dc2948f27e3e0ffbc3df380a9369ba77a0c"
+    //     )
+    //   )[0].registeredRecipients[0].allocations
+    //   // await getAllPoolsRegisteredByProfile(
+    //   //   "0x12a70e17d1e208e2030a847ceee962a0d0ce437455bcb14f2f52624a0e86a551"
+    //   // )
+    // );
+    // const allocations = (
+    //   await getAllPoolsCreatedByProfile(
+    //     "0x33bb7a6647db8acad7e60a7dff816dc2948f27e3e0ffbc3df380a9369ba77a0c"
+    //   )
+    // )[0].registeredRecipients[0].allocations;
+
+    // console.log(JSON.parse(allocations).allocationFrom);
+
+    const adminHat = (await getAllProfilesAdminHat())[0].adminHat;
+
+    console.log(adminHat);
+
+    const data = encodePacked(["uint256"], [adminHat]);
+
+    console.log(data);
+
+    const resp = await getProfileHats(data);
+
+
+
+    console.log(resp);
+  };
   const { address: account } = useAccount();
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
@@ -86,12 +123,6 @@ const Create = () => {
     setFile(fileUploaded);
   };
 
-
-
-
-
-  
-
   const registerAgent = async (_assistantID: string) => {
     try {
       if (
@@ -102,7 +133,6 @@ const Create = () => {
         console.log("Agent Details missing");
         return;
       }
-
 
       // const data = await publicClient?.simulateContract({
       //   account,
@@ -131,8 +161,6 @@ const Create = () => {
       console.log(error);
     }
   };
-
-  
 
   return (
     <div className="w-screen h-screen bg-gradient-to-r from-white via-white to-rose-100">
@@ -170,8 +198,7 @@ const Create = () => {
               Profile Details
             </p>
           </div>
-          <div className="mx-auto mt-6">
-          </div>
+          <div className="mx-auto mt-6"></div>
           <div className="flex flex-col items-center text-center mx-auto ">
             <div className="mt-7">
               <p className="text-xl text-black font-semibold">Name</p>
@@ -188,11 +215,9 @@ const Create = () => {
                 value={agentDetails.agentName}
               ></input>
             </div>
-            
+
             <div className="mt-5">
-              <p className="text-xl text-black font-semibold">
-                Description
-              </p>
+              <p className="text-xl text-black font-semibold">Description</p>
               <textarea
                 placeholder="tell what the agent does ..."
                 className="px-5 py-2 rounded-xl mt-2 w-full font-semibold h-36 border border-black"
@@ -206,9 +231,7 @@ const Create = () => {
               ></textarea>
             </div>
             <div className="mt-5">
-              <p className="text-xl text-black font-semibold">
-                X profile link
-              </p>
+              <p className="text-xl text-black font-semibold">X profile link</p>
               <textarea
                 placeholder="tell what the agent does ..."
                 className="px-5 py-2 rounded-xl mt-2 w-full font-semibold border border-black"
@@ -240,7 +263,6 @@ const Create = () => {
           </div>
         </div>
         {/* <div className="w-px self-stretch bg-gradient-to-tr from-transparent via-neutral-500 to-transparent opacity-100"></div> */}
-        
       </div>
       <div className="flex flex-col mt-16">
         <Drawer

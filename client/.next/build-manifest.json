@@ -12,6 +12,11 @@
   ],
   "rootMainFiles": [],
   "pages": {
+    "/OrganizationProfile": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/OrganizationProfile.js"
+    ],
     "/_app": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
@@ -22,10 +27,10 @@
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/create": [
+    "/userOrgs": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/create.js"
+      "static/chunks/pages/userOrgs.js"
     ]
   },
   "ampFirstPages": []

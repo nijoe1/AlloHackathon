@@ -1,92 +1,133 @@
-import React, { useState } from "react";
-import { Button, Input, InputGroup } from "@chakra-ui/react";
 import { useToast } from "@chakra-ui/react";
 import { Avatar, Wrap, WrapItem } from "@chakra-ui/react";
 
-import { useRef } from "react";
-import { MdOutlineAttachFile } from "react-icons/md";
-
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
-import { CONTRACT_ABI, CONTRACT_ADDRESSES } from "@/constants/contracts";
+import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/constants/HackRegistry";
 
-import { getProfileHats } from "@/utils/graphFunctions";
-
-import { encodePacked } from "viem";
-
+import React, { useState, useRef } from "react";
 import {
-  getAllProfilesAdminHat,
-  getAllPoolsCreatedByProfile,
-  getAllPoolsRegisteredByProfile,
-} from "@/utils/tableland";
+  Button,
+  Input,
+  InputGroup,
+  InputLeftElement,
+  Textarea,
+  Box,
+  VStack,
+  HStack,
+  Text,
+} from "@chakra-ui/react";
+import { MdOutlineAttachFile, MdWeb } from "react-icons/md";
+import { FaGithub } from "react-icons/fa";
+
+import { BsTwitterX } from "react-icons/bs";
 
 import Navbar from "@/components/navbar";
+import axios from "axios";
+import { useRouter } from "next/router";
+
 const Create = () => {
+  const router = useRouter();
+
   const toast = useToast();
-  const [profileDetails, setProfileDetails] = useState<{
-    profileName: string;
-    profileDescription: string;
-    profileImage: string | undefined;
-    twitterLink: string | undefined;
-    websiteLink: string | undefined;
-  }>({
+  const [isUploading, setIsUploading] = useState(false);
+  const [isProcessingTransaction, setIsProcessingTransaction] = useState(false);
+  const [profileDetails, setProfileDetails] = useState({
     profileName: "",
     profileDescription: "",
-    profileImage: undefined,
+    profileImage: "",
     twitterLink: "",
     websiteLink: "",
+    githubLink: "",
   });
+
+  const handleFileChange = (event: any) => {
+    const fileUploaded = event.target.files[0];
+    setFile(fileUploaded);
+    setProfileDetails({ ...profileDetails, profileImage: fileUploaded.name });
+  };
   const { address: account } = useAccount();
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
 
-  const [file, setFile] = useState("");
+  const [file, setFile] = useState<any>("");
 
   const hiddenFileInput = useRef(null);
   const handleClick = () => {
     //@ts-ignore
     hiddenFileInput?.current?.click();
   };
-  const handleChange = (event: any) => {
-    const fileUploaded = event.target.files[0];
-    console.log(fileUploaded);
-    setFile(fileUploaded);
+
+  const handleSubmit = async () => {
+    if (!profileDetails.profileName || !profileDetails.profileDescription) {
+      toast({ title: "Please fill in all fields", status: "warning" });
+      return;
+    }
+
+    const formData = new FormData();
+    if (file) {
+      formData.append("file", file);
+    }
+
+    // Append other profile details to the form data
+    formData.append("name", profileDetails.profileName);
+    formData.append("description", profileDetails.profileDescription);
+    formData.append("twitterLink", profileDetails.twitterLink);
+    formData.append("websiteLink", profileDetails.websiteLink);
+    formData.append("githubLink", profileDetails.githubLink);
+
+    setIsUploading(true); // Start uploading
+
+    try {
+      const response = await axios.post("/api/uploadProfile", formData);
+      const { fileCid, metadataCid } = response.data;
+      console.log("File uploaded to IPFS with CID:", fileCid);
+      console.log("Metadata uploaded to IPFS with CID:", metadataCid);
+
+      setIsUploading(false); // Stop uploading
+
+      toast({
+        title: "Profile Metadata Uploaded successfully",
+        status: "success",
+      });
+
+      setIsProcessingTransaction(true);
+      const res = await createProfile(metadataCid);
+
+      setIsProcessingTransaction(false);
+      if (!res) {
+        toast({
+          title: "Transaction rejected",
+          status: "error",
+        });
+        return;
+      }
+      toast({
+        title: "Profile Created successfully",
+        status: "success",
+      });
+
+      setTimeout(() => {
+        router.push("/"); // Replace '/' with the path to your home page
+      }, 1000);
+
+      // Now you can proceed to use these CIDs as needed
+    } catch (error) {
+      console.error("Error uploading:", error);
+      toast({ title: "Error uploading", status: "error" });
+    }
   };
 
-  const get = async () => {
-    // console.log(
-    //   (
-    //     await getAllPoolsCreatedByProfile(
-    //       "0x33bb7a6647db8acad7e60a7dff816dc2948f27e3e0ffbc3df380a9369ba77a0c"
-    //     )
-    //   )[0].registeredRecipients[0].allocations
-    //   // await getAllPoolsRegisteredByProfile(
-    //   //   "0x12a70e17d1e208e2030a847ceee962a0d0ce437455bcb14f2f52624a0e86a551"
-    //   // )
-    // );
-    // const allocations = (
-    //   await getAllPoolsCreatedByProfile(
-    //     "0x33bb7a6647db8acad7e60a7dff816dc2948f27e3e0ffbc3df380a9369ba77a0c"
-    //   )
-    // )[0].registeredRecipients[0].allocations;
-
-    // console.log(JSON.parse(allocations).allocationFrom);
-
-    const adminHat = (await getAllProfilesAdminHat())[0].adminHat;
-
-    console.log(adminHat);
-
-    const data = encodePacked(["uint256"], [adminHat]);
-
-    console.log(data);
-
-    const resp = await getProfileHats(data);
-
-    console.log(resp);
-
-
+  const getLoadingMessage = () => {
+    if (isUploading) {
+      return "Uploading file and metadata...";
+    }
+    if (isProcessingTransaction) {
+      return "Processing transaction...";
+    }
+    return "";
   };
 
-  const createProfile = async (_assistantID: string) => {
+  const createProfile = async (metadata: string) => {
     try {
       if (
         profileDetails.profileDescription == "" &&
@@ -97,18 +138,20 @@ const Create = () => {
         return;
       }
 
-      // const data = await publicClient?.simulateContract({
-      //   account,
-      //   address: CONTRACT_ADDRESSES,
-      //   abi: CONTRACT_ABI,
-      //   functionName: "registerAgent",
-      //   args: [
-      //     // {
-      //     //   // struct
-      //     // },
-      //   ],
-      // });
-      // console.log(data);
+      const data = await publicClient?.simulateContract({
+        account,
+        address: CONTRACT_ADDRESS,
+        abi: CONTRACT_ABI,
+        functionName: "createProfile",
+        args: [
+          profileDetails.profileName,
+          {
+            protocol: BigInt(1),
+            pointer: metadata,
+          },
+        ],
+      });
+      console.log(data);
       if (!walletClient) {
         console.log("Wallet client not found");
         return;
@@ -119,87 +162,64 @@ const Create = () => {
       const transaction = await publicClient.waitForTransactionReceipt({
         hash: hash,
       });
+      return true;
       console.log(transaction);
     } catch (error) {
       console.log(error);
+      return false;
     }
   };
 
   return (
-    <div className="w-screen h-screen bg-gradient-to-r from-white via-white to-rose-100">
-      <div className="fixed z-50 top-0 left-0 w-full ">
-        {" "}
-        <Navbar />
-      </div>
-      <div className="flex mt-20  items-center mx-50">
-        <div className="mt-10 w-1/3 mx-auto my-auto bg-indigo-100 px-10 flex flex-col border-2 border-black rounded-2xl">
-          <div className="mt-5">
-            <p className="text-black text-2xl font-semibold text-center">
-              Create Organization Profile
-            </p>
-          </div>
-          <div className="mx-auto mt-6"></div>
-          <div className="flex flex-col items-center text-center mx-auto ">
-            <div className="mt-7">
-              <p className="text-xl text-black font-semibold">Name</p>
-              <input
-                type="text"
-                placeholder="be creative ..."
-                className="px-5 py-2 rounded-xl mt-2 w-full font-semibold border border-black"
-                onChange={(e) =>
-                  setProfileDetails({
-                    ...profileDetails,
-                    profileName: e.target.value,
-                  })
-                }
-                value={profileDetails.profileName}
-              ></input>
-            </div>
-            <div className="mt-5">
-              <p className="text-xl text-black font-semibold">Upload pfp</p>
-              <InputGroup className="px-5 py-2 rounded-xl mt-2 w-full font-semibold h-9 border border-black">
-                {file ? (
-                  <p className="text-xs w-20 overflow">
-                    {/* @ts-ignore */}
-                    {file?.name}
-                  </p>
-                ) : (
-                  <div>
-                    <MdOutlineAttachFile
-                      onClick={handleClick}
-                      className="text-xl cursor-pointer"
-                    ></MdOutlineAttachFile>
-                    <input
-                      type="file"
-                      onChange={handleChange}
-                      ref={hiddenFileInput}
-                      style={{ display: "none" }}
-                    />
-                  </div>
-                )}
-              </InputGroup>
-            </div>
-
-            <div className="mt-5">
-              <p className="text-xl text-black font-semibold">Description</p>
-              <textarea
-                placeholder="tell what the agent does ..."
-                className="px-5 py-2 rounded-xl mt-2 w-full font-semibold h-36 border border-black"
-                onChange={(e) =>
-                  setProfileDetails({
-                    ...profileDetails,
-                    profileDescription: e.target.value,
-                  })
-                }
-                value={profileDetails.profileDescription}
-              ></textarea>
-            </div>
-
-            <div className="mt-5">
-              <p className="text-xl text-black font-semibold">X profile link</p>
-              <textarea
-                placeholder="tell what the agent does ..."
-                className="px-5 py-2 rounded-xl mt-2 w-full font-semibold border border-black"
+    <Box
+      className="bg-gradient-to-r from-white via-white to-rose-100"
+      w="full"
+      h="100vh"
+    >
+      <Navbar />
+      <VStack mt="20" spacing="4" align="stretch">
+        <Box
+          w="50%"
+          mx="auto"
+          bg="indigo.100"
+          p="6"
+          borderRadius="xl"
+          border="2px"
+          borderColor="gray.200"
+          boxShadow="md"
+        >
+          <Text fontSize="2xl" fontWeight="semibold" textAlign="center" mb="4">
+            Create Organization Profile
+          </Text>
+          <VStack spacing="4">
+            <Input
+              placeholder="Organization Name"
+              onChange={(e) =>
+                setProfileDetails({
+                  ...profileDetails,
+                  profileName: e.target.value,
+                })
+              }
+              value={profileDetails.profileName}
+            />
+            <Textarea
+              placeholder="Description"
+              onChange={(e) =>
+                setProfileDetails({
+                  ...profileDetails,
+                  profileDescription: e.target.value,
+                })
+              }
+              value={profileDetails.profileDescription}
+            />
+            <InputGroup>
+              <InputLeftElement
+                pointerEvents="none"
+                children={<BsTwitterX color="blue" />}
+              />
+              <Input
+                type="url"
+                placeholder="Twitter Profile Link"
                 onChange={(e) =>
                   setProfileDetails({
                     ...profileDetails,
@@ -207,15 +227,16 @@ const Create = () => {
                   })
                 }
                 value={profileDetails.twitterLink}
-              ></textarea>
-            </div>
-            <div className="mt-5">
-              <p className="text-xl text-black font-semibold">
-                Organization website
-              </p>
-              <textarea
-                placeholder="tell what the agent does ..."
-                className="px-5 py-2 rounded-xl mt-2 w-full font-semibold h-36 border border-black"
+              />
+            </InputGroup>
+            <InputGroup>
+              <InputLeftElement
+                pointerEvents="none"
+                children={<MdWeb color="green" />}
+              />
+              <Input
+                type="url"
+                placeholder="Website Link"
                 onChange={(e) =>
                   setProfileDetails({
                     ...profileDetails,
@@ -223,21 +244,55 @@ const Create = () => {
                   })
                 }
                 value={profileDetails.websiteLink}
-              ></textarea>
-            </div>
-          </div>
-          <div className="flex flex-col items-center text-center mx-auto mt-5 mb-2">
+              />
+            </InputGroup>
+            <InputGroup>
+              <InputLeftElement
+                pointerEvents="none"
+                children={<FaGithub color="black" />}
+              />
+              <Input
+                type="url"
+                placeholder="GitHub Profile Link"
+                onChange={(e) =>
+                  setProfileDetails({
+                    ...profileDetails,
+                    githubLink: e.target.value,
+                  })
+                }
+                value={profileDetails.githubLink}
+              />
+            </InputGroup>
+            <HStack spacing="2">
+              <Button
+                onClick={() => handleClick()}
+                leftIcon={<MdOutlineAttachFile />}
+              >
+                Upload Image
+              </Button>
+              <Text fontSize="sm">{file ? file.name : "No file selected"}</Text>
+              <input
+                type="file"
+                ref={hiddenFileInput}
+                onChange={handleFileChange}
+                style={{ display: "none" }}
+                accept="image/*"
+              />
+            </HStack>
             <Button
-              onClick={async () => {
-                await get();
-              }}
+              colorScheme="blue"
+              onClick={handleSubmit}
+              isLoading={isUploading || isProcessingTransaction}
             >
-              Create
+              Create Profile
             </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+            {isUploading || isProcessingTransaction ? (
+              <Text fontSize="md">{getLoadingMessage()}</Text>
+            ) : null}
+          </VStack>
+        </Box>
+      </VStack>
+    </Box>
   );
 };
 

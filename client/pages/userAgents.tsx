@@ -4,11 +4,26 @@ import { Input, InputGroup, InputRightAddon } from "@chakra-ui/react";
 import { IoIosSend } from "react-icons/io";
 import { getCreator, getUser } from "@/utils/graphFunctions";
 import React, { use, useEffect, useState } from "react";
-import { useAccount } from "wagmi";
 import { toBytes, toHex } from "viem";
 import Navbar from "@/components/navbar";
 import { ThreadMessagesMarkdown } from "@/components/ThreadMessagesMarkdown";
 import { Spinner } from "@chakra-ui/react";
+
+import { getProfileHats } from "@/utils/graphFunctions";
+
+import { encodePacked } from "viem";
+
+import {
+  getAllProfilesAdminHat,
+  getAllActivePools,
+  getProfilesData,
+  getAllPoolsCreatedByProfile,
+  getAllPoolsRegisteredByProfile,
+} from "@/utils/tableland";
+import { profile } from "console";
+
+import { useAccount, usePublicClient, useWalletClient } from "wagmi";
+import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/constants/HackRegistry";
 export default function UserAgents() {
   const { address: userAccount } = useAccount();
 
@@ -23,6 +38,60 @@ export default function UserAgents() {
   const [inputPrompt, setInputPrompt] = useState<string>();
   const [subscriptionsData, setSubscriptionsData] = useState<any[]>();
   const [loading, setLoading] = useState<boolean>(false);
+  const { address: account } = useAccount();
+  const publicClient = usePublicClient();
+  const { data: walletClient } = useWalletClient();
+
+  const get = async (address: string | undefined) => {
+    const profiles = await getAllProfilesAdminHat();
+    let partOfProfiles = [];
+    for (const profile of profiles) {
+      const adminHat = profile.adminHat;
+      let data = encodePacked(["uint256"], [adminHat]);
+      let resp = await getProfileHats(data);
+      console.log(resp);
+      const searchAdmin = resp.hat.wearers[0].id == address?.toLowerCase();
+      if (searchAdmin) {
+        let data = await getProfilesData([profile.profileID]);
+        let obj = { profileData: data, type: "ADMIN" };
+        partOfProfiles.push(obj);
+        continue;
+      }
+      for (const wearer of resp.hat.subhats.wearers) {
+        if (wearer.id == address?.toLowerCase()) {
+          let data = await getProfilesData([profile.profileID]);
+          let obj = { profileData: data, type: "MANAGER" };
+          partOfProfiles.push(obj);
+          continue;
+        }
+      }
+
+      for (const wearer of resp.hat.subhats.subhats.wearers) {
+        if (wearer.id == address?.toLowerCase()) {
+          let data = await getProfilesData([profile.profileID]);
+          let obj = { profileData: data, type: "REVIEWER" };
+          partOfProfiles.push(obj);
+          continue;
+        }
+      }
+    }
+    console.log(partOfProfiles);
+
+    const data = await publicClient.readContract({
+      address: CONTRACT_ADDRESS,
+      abi: CONTRACT_ABI,
+      functionName: "getTime",
+    });
+
+    const activePools = await getAllActivePools(data);
+    console.log(activePools);
+
+    // const profileData = await getProfilesData([
+    //   "0x33bb7a6647db8acad7e60a7dff816dc2948f27e3e0ffbc3df380a9369ba77a0c",
+    //   "0x33bb7a6647db8acad7e60a7dff816dc2948f27e3e0ffbc3df380a9369ba77a0c",
+    // ]);
+    // console.log(profileData);
+  };
 
   const getAssistant = async (assistantID: string) => {
     console.log("Fetching Assistant... Calling OpenAI");
@@ -244,8 +313,6 @@ export default function UserAgents() {
       }
     }
   };
-
-
 
   const performToolCall = async (toolCall: any): Promise<any | undefined> => {
     try {
@@ -473,7 +540,9 @@ export default function UserAgents() {
                 <ul className="space-y-2 font-medium">
                   <li>
                     <div
-                      onClick={() => router.push("/agents")}
+                      onClick={async () => {
+                        await get(userAccount);
+                      }}
                       className="border cursor-pointer align-middle flex border-gray-300 bg-blue-100 px-6 py-1 rounded-3xl"
                     >
                       <div className="flex items-center">
@@ -519,15 +588,8 @@ export default function UserAgents() {
                           <button
                             type="button"
                             className="flex items-center w-full p-2 text-base text-gray-900 transition duration-75 rounded-lg group hover:bg-orange-200"
-                            onClick={() => {
-                              setAssistantID(subscription.assistantId);
-
-                              setThreadID(subscription.threadID);
-
-                              getThread(
-                                subscription.threadID,
-                                subscription.assistantId
-                              );
+                            onClick={async () => {
+                              await get(userAccount);
                             }}
                           >
                             <span className="flex-1 ms-3 text-left rtl:text-right whitespace-nowrap">

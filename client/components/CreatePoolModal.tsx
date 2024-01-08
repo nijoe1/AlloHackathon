@@ -156,7 +156,8 @@ const CreatePoolModal = (profileID: any) => {
     }
   };
 
-  const calculateSeconds = (days: any) => days * 24 * 60 * 60;
+  // const calculateSeconds = (days: any) => days * 24 * 60 * 60;
+  const calculateSeconds = (days: any) => days * 60;
 
   const handleFileChange = (event: any) => {
     setPoolForm({ ...poolForm, poolImage: event.target.files[0] });

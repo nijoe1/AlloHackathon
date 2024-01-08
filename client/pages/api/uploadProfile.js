@@ -51,7 +51,7 @@ export default async function handler(req, res) {
       const metadata = {
         name: fields.name[0],
         description: fields.description[0],
-        image: `https://ipfs.io/ipfs/${fileResponse.data.IpfsHash}`, // Linking the image uploaded in the previous step
+        image: `https://cloudflare-ipfs.com/ipfs/{fileResponse.data.IpfsHash}`, // Linking the image uploaded in the previous step
         websiteLink: fields.websiteLink[0],
         githubLink: fields.githubLink[0],
         twitterLink: fields.twitterLink[0],

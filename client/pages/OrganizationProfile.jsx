@@ -68,7 +68,9 @@ const OrganizationProfile = (profileID) => {
       let creatorMetadata = {};
       const processedPoolsPromises = pools.map(async (pool) => {
         let CID = pool.poolDetails.poolMetadata;
-        const metadataResponse = await axios.get(`https://ipfs.io/ipfs/${CID}`);
+        const metadataResponse = await axios.get(
+          `https://cloudflare-ipfs.com/ipfs/${CID}`
+        );
         const metadata = metadataResponse.data;
 
         const time = await getTime();
@@ -101,7 +103,7 @@ const OrganizationProfile = (profileID) => {
           address: DAI_ADDRESS,
           abi: DAI_ABI,
           functionName: "balanceOf",
-          args: [pool.poolDetails.strategy ],
+          args: [pool.poolDetails.strategy],
         });
 
         let poolAmount = formatCurrency(poolAmount1.toString());
@@ -130,7 +132,7 @@ const OrganizationProfile = (profileID) => {
       const profile = await getProfileDetails(orgID);
       const pools = await getAllPoolsCreatedByProfile(orgID);
       let creatorMetadata = await axios.get(
-        `https://ipfs.io/ipfs/${profile[0].metadata}`
+        `https://cloudflare-ipfs.com/ipfs/${profile[0].metadata}`
       );
       setCreatorMetadata(creatorMetadata.data);
 

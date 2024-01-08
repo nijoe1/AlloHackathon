@@ -189,7 +189,7 @@ const Pool = () => {
 
   const fetchRecipientMetadata = async (recipient) => {
     const metadataResponse = await axios.get(
-      `https://ipfs.io/ipfs/${recipient.metadata}`
+      `https://cloudflare-ipfs.com/ipfs/${recipient.metadata}`
     );
     return metadataResponse.data;
   };
@@ -239,7 +239,9 @@ const Pool = () => {
     try {
       const processedPoolsPromises = pools.map(async (pool) => {
         let CID = pool.poolDetails.poolMetadata;
-        const metadataResponse = await axios.get(`https://ipfs.io/ipfs/${CID}`);
+        const metadataResponse = await axios.get(
+          `https://cloudflare-ipfs.com/ipfs/${CID}`
+        );
         const metadata = metadataResponse.data;
         const time = await getTime();
         const poolState =
@@ -337,7 +339,7 @@ const Pool = () => {
             src={
               detailsFetched
                 ? pool.metadata.image
-                : "https://ipfs.io/ipfs/Qmf9bVdXsccGcuissvdKdkW4fkm8mhh37EDtEqZDeiGqZX"
+                : "https://cloudflare-ipfs.com/ipfs/Qmf9bVdXsccGcuissvdKdkW4fkm8mhh37EDtEqZDeiGqZX"
             }
             alt="Pool Image"
             borderRadius="full"

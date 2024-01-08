@@ -27,7 +27,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   async function fetchIPFSMetadata(ipfsHash: string) {
-    const metadataUrl = `https://ipfs.io/ipfs/${ipfsHash}`;
+    const metadataUrl = `https://cloudflare-ipfs.com/ipfs/${ipfsHash}`;
     try {
       const response = await fetch(metadataUrl);
       if (!response.ok) throw new Error("Failed to fetch IPFS metadata");
@@ -43,7 +43,7 @@ const Index = () => {
     const orgsWithMetadata = await Promise.all(
       orgs.map(async (org) => {
         const metadata = await fetchIPFSMetadata(
-          `${org.profileData[0].ProfileMetadata}`
+          `${org?.profileData[0]?.ProfileMetadata}`
         );
 
         let obj = {
@@ -58,7 +58,7 @@ const Index = () => {
     );
 
     await getAllPoolsCreatedByProfile(
-      orgsWithMetadata[0].profileData[0].profileID
+      orgsWithMetadata[0]?.profileData[0]?.profileID
     );
     setOrganizations(orgsWithMetadata);
     setIsLoading(false);

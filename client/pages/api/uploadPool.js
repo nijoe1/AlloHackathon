@@ -51,7 +51,7 @@ export default async function handler(req, res) {
       const metadataFormData = {
         name: fields.name[0],
         description: fields.description[0],
-        image: `https://ipfs.io/ipfs/${fileResponse.data.IpfsHash}`, // Linking the image uploaded in the previous step
+        image: `https://cloudflare-ipfs.com/ipfs/${fileResponse.data.IpfsHash}`, // Linking the image uploaded in the previous step
         tokenAddress: fields.tokenAddress[0],
         startingPoolAmount: fields.startingPoolAmount[0],
         allocationDurationDays: fields.allocationDurationDays[0],

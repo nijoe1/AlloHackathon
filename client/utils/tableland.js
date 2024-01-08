@@ -37,6 +37,19 @@ export const getProfileAdminHat = async (profileID) => {
   }
 };
 
+export const getProfileHats = async (profileID) => {
+  const query = `SELECT * FROM ${tables.profiles} AS a WHERE a.profileID = '${profileID}'`;
+  const fullUrl = `${TablelandGateway}${encodeURIComponent(query)}`;
+
+  try {
+    const response = await axios.get(fullUrl);
+    console.log(response);
+    return response.data[0];
+  } catch (error) {
+    return null;
+  }
+};
+
 export const getAllPoolsCreatedByProfile = async (profileID) => {
   const query = `SELECT 
                     p.poolID,

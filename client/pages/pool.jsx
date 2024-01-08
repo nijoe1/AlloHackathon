@@ -302,6 +302,14 @@ const Pool = () => {
       console.log(processedPools);
       setPool(processedPools[0]);
       let registrants = processedPools[0].registeredRecipients;
+      let totalVotesAllocated =
+        processedPools[0].poolDetails.totalVotesAllocated;
+      registrants.forEach((registrant) => {
+        let totalVotesReceived = registrant.totalVotesReceived;
+        registrant.poolPercentage = totalVotesReceived / totalVotesAllocated;
+      });
+      console.log(registrants);
+
       sortRecipientsByPercentage(registrants);
       setRecipients(registrants);
       setDetailsFetched(true);
@@ -443,7 +451,7 @@ const Pool = () => {
                         {recipient.reviewStatusRoundOne}
                       </Badge>
                     </Td>
-                    <Td isNumeric>{recipient.totalVotesReceived}</Td>
+                    <Td isNumeric>{recipient.poolPercentage * 100}%</Td>
                     {(Access === "MANAGER" ||
                       Access === "ADMIN" ||
                       (Access === "REVIEWER" &&

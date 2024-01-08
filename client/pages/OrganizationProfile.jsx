@@ -30,7 +30,7 @@ import {
   getProfileDetails,
 } from "@/utils/tableland";
 
-import { calculateRemainingTime, formatCurrency,getOrgMembers } from "@/utils/utils";
+import { calculateRemainingTime, formatCurrency } from "@/utils/utils";
 
 import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/constants/HackRegistry";
 import { DAI_ABI, DAI_ADDRESS } from "@/constants/DAI";

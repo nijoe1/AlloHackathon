@@ -32,17 +32,24 @@ const StyledTable = chakra(Table, {
 
 import { HATS_ABI, HATS_CONTRACT_ADDRESS } from "@/constants/Hats";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
+import { getProfileHats } from "@/utils/tableland";
 
 const ManageOrganizationTab = ({ orgID }) => {
   const [detailsFetched, setDetailsFetched] = useState(false);
   const [newMembers, setNewMembers] = useState([]);
   const [showRemoveToggle, setShowRemoveToggle] = useState(false);
   const [members, setMembers] = useState();
+  const [Hats, setHats] = useState();
   useEffect(() => {
     async function fetch() {
       let res = await getOrgMembers(orgID);
-      setMembers(res);
-      console.log(res)
+      let OrgData = await getProfileHats(orgID);
+      let HATS = [OrgData.adminHat, OrgData.managerHat, OrgData.reviewerHat];
+
+      console.log(HATS);
+      setMembers(res.result);
+      setHats(HATS);
+      console.log(res.HATSIDs);
       setDetailsFetched(!detailsFetched);
     }
     if (!detailsFetched) fetch();
@@ -67,20 +74,30 @@ const ManageOrganizationTab = ({ orgID }) => {
   const handleAssignRoles = () => {
     // Implement logic to assign roles to new members
     console.log("Assigning roles to new members:", newMembers);
+    assignNewRoles(newMembers);
   };
 
   const { address: account } = useAccount();
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
 
-  const assignNewRoles = async (hatIDs, addressesArray) => {
+  const assignNewRoles = async (newMembers) => {
+    const roleToHatIndex = {
+      Admin: 0,
+      Manager: 1,
+      Reviewer: 2,
+    };
+
+    const hatidArray = newMembers.map(({ role }) => Hats[roleToHatIndex[role]]);
+    const addressArray = newMembers.map(({ address }) => address);
+    console.log(hatidArray, addressArray);
     try {
       const data = await publicClient?.simulateContract({
         account,
         address: HATS_CONTRACT_ADDRESS,
         abi: HATS_ABI,
         functionName: "batchMintHats",
-        args: [hatIDs, addressesArray],
+        args: [hatidArray, addressArray],
       });
 
       if (!walletClient) {

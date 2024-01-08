@@ -58,6 +58,7 @@ export const getUserOrganizations = async (address) => {
     const adminHat = profile.adminHat;
     let data = encodePacked(["uint256"], [adminHat]);
     let resp = await getProfileHats(data);
+    console.log(resp);
     const searchAdmin = resp.hat.wearers[0].id == address?.toLowerCase();
     if (searchAdmin) {
       let data = await getProfilesData([profile.profileID]);
@@ -65,21 +66,24 @@ export const getUserOrganizations = async (address) => {
       partOfProfiles.push(obj);
       continue;
     }
-    for (const wearer of resp.hat.subhats.wearers) {
-      if (wearer.id == address?.toLowerCase()) {
-        let data = await getProfilesData([profile.profileID]);
-        let obj = { profileData: data, type: "MANAGER" };
-        partOfProfiles.push(obj);
-        continue;
+    if (resp?.hat?.subhats?.wearers) {
+      for (const wearer of resp.hat.subhats.wearers) {
+        if (wearer.id == address?.toLowerCase()) {
+          let data = await getProfilesData([profile.profileID]);
+          let obj = { profileData: data, type: "MANAGER" };
+          partOfProfiles.push(obj);
+          continue;
+        }
       }
     }
-
-    for (const wearer of resp.hat.subhats.subhats.wearers) {
-      if (wearer.id == address?.toLowerCase()) {
-        let data = await getProfilesData([profile.profileID]);
-        let obj = { profileData: data, type: "REVIEWER" };
-        partOfProfiles.push(obj);
-        continue;
+    if (resp?.hat?.subhats?.subhats?.wearers) {
+      for (const wearer of resp.hat.subhats.subhats.wearers) {
+        if (wearer.id == address?.toLowerCase()) {
+          let data = await getProfilesData([profile.profileID]);
+          let obj = { profileData: data, type: "REVIEWER" };
+          partOfProfiles.push(obj);
+          continue;
+        }
       }
     }
   }
@@ -92,30 +96,19 @@ export const getOrgMembers = async (profileID) => {
   console.log(adminHat);
   let data = encodePacked(["uint256"], [adminHat]);
   let resp = await getProfileHats(data);
-  let RolesArray = parseHatObjectOneDimensional(resp);
-  console.log(RolesArray);
-  return RolesArray;
+  console.log(resp);
+  let res = parseHatObjectOneDimensional(resp);
+  return res;
 };
 
 function parseHatObjectOneDimensional(hatData) {
   const addressAccessMap = new Map(); // To track access role for each address
 
   function parseHat(hat, access) {
-    hat.wearers.forEach((wearer) => {
+    hat?.wearers?.forEach((wearer) => {
       const wearerAddress = wearer.id;
 
       if (!addressAccessMap.has(wearerAddress)) {
-        addressAccessMap.set(wearerAddress, access);
-      } else if (
-        access === "Manager" &&
-        addressAccessMap.get(wearerAddress) !== "Admin"
-      ) {
-        addressAccessMap.set(wearerAddress, access);
-      } else if (
-        access === "Reviewer" &&
-        addressAccessMap.get(wearerAddress) !== "Admin" &&
-        addressAccessMap.get(wearerAddress) !== "Manager"
-      ) {
         addressAccessMap.set(wearerAddress, access);
       }
     });
@@ -123,9 +116,14 @@ function parseHatObjectOneDimensional(hatData) {
     if (hat.subHats && hat.subHats.length > 0) {
       if (access === "Admin") {
         parseHat(hat.subHats[0], "Manager"); // First subhat is Manager
-        for (let i = 1; i < hat.subHats.length; i++) {
-          parseHat(hat.subHats[i], "Reviewer"); // Other subhats are Reviewers
-        }
+      } else if (access === "Manager") {
+        hat.subHats[0].wearers.forEach((wearer) => {
+          const wearerAddress = wearer.id;
+
+          if (!addressAccessMap.has(wearerAddress)) {
+            addressAccessMap.set(wearerAddress, "Reviewer");
+          }
+        });
       }
     }
   }
@@ -136,9 +134,9 @@ function parseHatObjectOneDimensional(hatData) {
     role,
     address,
   }));
-
-  return result;
+  return { result };
 }
+
 export const getUserAdminOrgs = async (address) => {
   const profiles = await getAllProfilesAdminHat();
   let partOfProfiles = [];

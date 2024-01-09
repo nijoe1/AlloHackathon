@@ -68,7 +68,7 @@ const Pool = () => {
   const [selectedRecipient, setSelectedRecipient] = useState(null);
   const [reviewVotes, setReviewVotes] = useState({});
   const [allocationVotes, setAllocationVotes] = useState({});
-  const [toggleReview, setToggleReview] = useState(true);
+  const [toggleReview, setToggleReview] = useState(false);
 
   const [selectedRecipients, setSelectedRecipients] = useState({});
 
@@ -150,6 +150,39 @@ const Pool = () => {
     }
   };
 
+  const Distribute = async () => {
+    let addressArray = [];
+    recipients.map((recipient, index) => {
+      if (recipient.reviewStatusRoundOne === "Accepted")
+        addressArray.push(recipient.recipientAddress);
+    });
+
+    try {
+      const data = await publicClient?.simulateContract({
+        account,
+        address: ALLO_CONTRACT_ADDRESS,
+        abi: ALLO_CONTRACT_ABI,
+        functionName: "distribute",
+        args: [poolID, addressArray, "0x00"],
+      });
+      console.log(data);
+      if (!walletClient) {
+        console.log("Wallet client not found");
+        return;
+      }
+      // @ts-ignore
+      const hash = await walletClient.writeContract(data.request);
+      console.log("Transaction Sent");
+      const transaction = await publicClient.waitForTransactionReceipt({
+        hash: hash,
+      });
+      return true;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  };
+
   // Function to handle review vote changes
   const handleReviewVoteChange = (recipientID, vote) => {
     setReviewVotes((prevVotes) => ({ ...prevVotes, [recipientID]: vote }));
@@ -162,15 +195,14 @@ const Pool = () => {
   };
 
   function calculateRemainingVotes() {
-    let remainingVotes = 0;
+    let remainingVotes = pool.poolDetails.votesPerAllocator;
 
-    pool.allocatorsInfo.forEach((allocator) => {
-      const totalVotesAllocated = Math.sqrt(allocator.totalVotesAllocated);
-
-      allocator.allocations.forEach((allocation) => {
+    pool.allocatorsInfo?.forEach((allocator) => {
+      allocator.allocations?.forEach((allocation) => {
         if (allocation.recipientID === account.toLowerCase()) {
-          remainingVotes +=
-            pool.poolDetails.votesPerAllocator - totalVotesAllocated;
+          remainingVotes -= Math.sqrt(
+            allocation.totalVotesAllocated * 10 ** 18
+          );
         }
       });
     });
@@ -189,7 +221,7 @@ const Pool = () => {
 
   const fetchRecipientMetadata = async (recipient) => {
     const metadataResponse = await axios.get(
-      `https://cloudflare-ipfs.com/ipfs/${recipient.metadata}`
+      `https://ipfs.io/ipfs/${recipient.metadata}`
     );
     return metadataResponse.data;
   };
@@ -235,21 +267,51 @@ const Pool = () => {
     }
   }
 
+  function IsSecondDistributionDone(recipients) {
+    for (const recipient of recipients) {
+      const secondDistribution = recipient.distributions.find(
+        (distribution) => distribution.streamID === "0"
+      );
+
+      if (secondDistribution) {
+        return true; // Found a recipient with a second distribution with streamID "0"
+      }
+    }
+
+    return false; // No recipient with a second distribution with streamID "0" found
+  }
+
   const processPoolsWithMetadata = async (pools) => {
+    const processedPools = [];
+
     try {
-      const processedPoolsPromises = pools.map(async (pool) => {
+      for (const pool of pools) {
         let CID = pool.poolDetails.poolMetadata;
-        const metadataResponse = await axios.get(
-          `https://cloudflare-ipfs.com/ipfs/${CID}`
-        );
+        console.log(CID);
+        const metadataResponse = await axios.get(`https://ipfs.io/ipfs/${CID}`);
         const metadata = metadataResponse.data;
+        const metadataResponse2 = await axios.get(`${metadata.metadata}`);
+        metadata.image = metadataResponse2.data.image;
+
         const time = await getTime();
-        const poolState =
-          time < pool.poolDetails.RETs
-            ? "RegistrationPeriod"
-            : time < pool.poolDetails.AETs
-            ? "AllocationPeriod"
-            : "WorkingPeriod";
+        let poolState;
+
+        if (time <= pool.poolDetails.RETs) {
+          poolState = "RegistrationPeriod";
+        } else if (time <= pool.poolDetails.AETs) {
+          poolState = "AllocationPeriod";
+        } else if (pool.poolDetails.DistributionStartTime === 0) {
+          poolState = "WaitingForStreamDistribution";
+        } else if (
+          pool.poolDetails.DistributionStartTime + pool.poolDetails.PWDs <=
+            time &&
+          !IsSecondDistributionDone(pool.registeredRecipients)
+        ) {
+          poolState = "WaitingForFinalDistribution";
+        } else {
+          poolState = "Pool Disabled";
+        }
+
         let remainingTime;
         if (poolState === "WorkingPeriod") {
           remainingTime = calculateRemainingTime(
@@ -278,29 +340,26 @@ const Pool = () => {
 
         let poolAmount = formatCurrency(poolAmount1.toString());
 
-        // Return a new object with the original pool data and the fetched metadata
-        return {
+        processedPools.push({
           ...pool,
           metadata,
-          poolState: poolState,
+          poolState,
           poolAmount: poolAmount.toString(),
-          remainingTime: remainingTime,
-        };
-      });
-
-      // Wait for all promises to resolve
-      const processedPools = await Promise.all(processedPoolsPromises);
-      return processedPools;
+          remainingTime,
+        });
+      }
     } catch (error) {
       console.error("Error processing pools:", error);
       return []; // Return an empty array or handle the error as needed
     }
+
+    return processedPools;
   };
 
   useEffect(() => {
     const fetchData = async () => {
-      const pool = await getPool(poolID);
-      const processedPools = await processPoolsWithMetadata([pool[0]]);
+      const pooll = await getPool(poolID);
+      const processedPools = await processPoolsWithMetadata([pooll[0]]);
       console.log(processedPools);
       setPool(processedPools[0]);
       let registrants = processedPools[0].registeredRecipients;
@@ -310,7 +369,6 @@ const Pool = () => {
         let totalVotesReceived = registrant.totalVotesReceived;
         registrant.poolPercentage = totalVotesReceived / totalVotesAllocated;
       });
-      console.log(registrants);
 
       sortRecipientsByPercentage(registrants);
       setRecipients(registrants);
@@ -318,7 +376,7 @@ const Pool = () => {
     };
 
     if (poolID && !detailsFetched) fetchData();
-  });
+  }, [poolID]);
 
   return (
     <Box w="full">
@@ -338,8 +396,8 @@ const Pool = () => {
           <Image
             src={
               detailsFetched
-                ? pool.metadata.image
-                : "https://cloudflare-ipfs.com/ipfs/Qmf9bVdXsccGcuissvdKdkW4fkm8mhh37EDtEqZDeiGqZX"
+                ? `data:image/png;base64,${pool.metadata.image}`
+                : "https://ipfs.io/ipfs/Qmf9bVdXsccGcuissvdKdkW4fkm8mhh37EDtEqZDeiGqZX"
             }
             alt="Pool Image"
             borderRadius="full"
@@ -379,7 +437,7 @@ const Pool = () => {
       />
 
       <Box className="flex flex-col items-center " mx="30%" my={3}>
-        {(Access == "ADMIN" || Access == "MANAGER") && (
+        {(Access == "ADMIN" || Access == "MANAGER" || Access == "REVIEWER") && (
           <Box mx="10%" my={3} className="flex flex-col items-center">
             <Text fontSize="l" fontWeight="bold">
               {pool.poolState == "RegistrationPeriod"
@@ -405,12 +463,14 @@ const Pool = () => {
             <Tr>
               <Th>Project</Th>
               <Th>Status</Th>
-              <Th isNumeric>Allocations %</Th>
-              {(Access === "MANAGER" ||
-                Access === "ADMIN" ||
-                (Access === "REVIEWER" &&
-                  (pool.poolState == "RegistrationPeriod" ||
-                    pool.poolState == "AllocationPeriod"))) &&
+              {pool.poolState != "RegistrationPeriod" && (
+                <Th isNumeric>Allocations %</Th>
+              )}
+              {(Access == "MANAGER" ||
+                Access == "ADMIN" ||
+                Access == "REVIEWER") &&
+                (pool.poolState == "RegistrationPeriod" ||
+                  pool.poolState == "AllocationPeriod") &&
                 toggleReview && <Th>Accept?</Th>}
               {(Access === "MANAGER" || Access === "ADMIN") &&
                 pool.poolState == "AllocationPeriod" &&
@@ -431,9 +491,7 @@ const Pool = () => {
                         <ChakraLink
                           as={Button}
                           onClick={() =>
-                            router.push(
-                              `/OrganizationProfile/${recipient.recipientID}`
-                            )
+                            router.push(`/profile/${recipient.recipientID}`)
                           }
                         >
                           <FaExternalLinkAlt />
@@ -453,12 +511,14 @@ const Pool = () => {
                         {recipient.reviewStatusRoundOne}
                       </Badge>
                     </Td>
-                    <Td isNumeric>{recipient.poolPercentage * 100}%</Td>
-                    {(Access === "MANAGER" ||
-                      Access === "ADMIN" ||
-                      (Access === "REVIEWER" &&
-                        (pool.poolStatus == "RegistrationPeriod" ||
-                          pool.poolStatus == "AllocationPeriod"))) &&
+                    {pool.poolState != "RegistrationPeriod" && (
+                      <Td isNumeric>{recipient.poolPercentage * 100}%</Td>
+                    )}
+                    {(Access == "MANAGER" ||
+                      Access == "ADMIN" ||
+                      Access == "REVIEWER") &&
+                      (pool.poolState == "RegistrationPeriod" ||
+                        pool.poolState == "AllocationPeriod") &&
                       toggleReview && (
                         <Td textAlign="center">
                           <Switch
@@ -477,7 +537,6 @@ const Pool = () => {
                                 recipient.recipientAddress,
                                 e.target.checked ? 2 : 3
                               );
-                              // Update your review object here as needed
                             }}
                           />
                         </Td>
@@ -531,32 +590,40 @@ const Pool = () => {
         </Table>
         <div></div>
       </Box>
-      <Box w="full">
-        <Flex mx="80%" width="full">
-          {pool.poolState == "RegistrationPeriod" ? (
+      <Box w="full" className="flex flex-col items-center mt-5">
+        {pool.poolState == "RegistrationPeriod" ? (
+          <Button
+            colorScheme="blue"
+            onClick={async () => {
+              await reviewRecipients(reviewVotes);
+            }}
+          >
+            Review
+          </Button>
+        ) : pool.poolState == "AllocationPeriod" ? (
+          <div>
+            {" "}
             <Button
               onClick={async () => {
-                await reviewRecipients(reviewVotes);
+                await AllocateVotes(allocationVotes);
               }}
             >
-              Review
+              {`Allocate`}
             </Button>
-          ) : pool.poolState == "AllocationPeriod" ? (
-            <div>
-              {" "}
-              <Button
-                onClick={async () => {
-                  await AllocateVotes(allocationVotes);
-                }}
-              >
-                {`Allocate`}
-              </Button>
-              <Text>Remaining Votes: {calculateRemainingVotes()}</Text>
-            </div>
-          ) : (
-            <div></div>
-          )}
-        </Flex>
+            <Text>Remaining Votes: {calculateRemainingVotes()}</Text>
+          </div>
+        ) : (
+          <div>
+            <Button
+              colorScheme="blue"
+              onClick={async () => {
+                await Distribute();
+              }}
+            >
+              Distribute
+            </Button>
+          </div>
+        )}
       </Box>
 
       {/* Recipient Details Modal */}

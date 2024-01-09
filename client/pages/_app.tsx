@@ -9,12 +9,12 @@ import {
   lightTheme,
 } from "@rainbow-me/rainbowkit";
 import { configureChains, createConfig, WagmiConfig } from "wagmi";
-import { polygonMumbai,arbitrumSepolia } from "wagmi/chains";
+import { arbitrumSepolia, arbitrum } from "wagmi/chains";
 import { publicProvider } from "wagmi/providers/public";
 import { useRouter } from "next/router";
 
 const { chains, publicClient } = configureChains(
-  [polygonMumbai,arbitrumSepolia],
+  [arbitrumSepolia, arbitrum],
   [publicProvider()]
 );
 
@@ -30,11 +30,12 @@ const wagmiConfig = createConfig({
   publicClient,
 });
 
-const id = ''
+const id = "";
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
-  const showHeader = router.pathname === "/create" || `/contribute/${id}` ? false : true;
+  const showHeader =
+    router.pathname === "/create" || `/contribute/${id}` ? false : true;
   return (
     <ChakraProvider>
       <WagmiConfig config={wagmiConfig}>

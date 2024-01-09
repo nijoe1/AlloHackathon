@@ -109,9 +109,10 @@ contract HackRegistry is RegistryIndexer {
         initializeParams.params.poolManagerHatId = profile.poolManagerHatId;
         initializeParams.params.data = initData;
 
-        IERC20(_token).transferFrom(msg.sender, address(this), _amount);
-
-        IERC20(_token).approve(address(Allo), _amount);
+        if(_amount > 0){
+            IERC20(_token).transferFrom(msg.sender, address(this), _amount);
+            IERC20(_token).approve(address(Allo), _amount);
+        } 
 
         address strategy = Clone.createClone(strategy_implementation, deployNonce++);
 
@@ -217,6 +218,7 @@ contract HackRegistry is RegistryIndexer {
 
     function InsertDistributions(
         uint256 poolID,
+        uint8 round,
         uint256[] memory distributionAmount,
         uint256[] memory streamID,
         address[] memory recipientIDs
@@ -224,6 +226,9 @@ contract HackRegistry is RegistryIndexer {
         _checkCallerIsPoolStrategy(poolID);
 
         InsertDistributionsToPool(poolID, distributionAmount, streamID, recipientIDs);
+
+        if(round == 1) AddFirstDistributionTime(poolID);
+
     }
 
     function _checkCallerIsPoolStrategy(uint256 _poolId) internal view {

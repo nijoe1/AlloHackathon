@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.19;
 
-import {IStrategy} from "../../interfaces/IStrategy.sol";
+import {IStrategy} from "./IStrategy.sol";
 // Internal Libraries
-import {Metadata} from "../../libraries/Metadata.sol";
+import {Metadata} from "../libraries/Metadata.sol";
 
 interface Types is IStrategy {
     error INVALID_ROUND_ONE_PERCENTAGE();
@@ -78,8 +78,10 @@ interface IRegistryIndexer {
 
     function InsertDistributions(
         uint256 poolID,
+        uint8 round,
         uint256[] memory distributionAmount,
         uint256[] memory streamID,
         address[] memory recipientIDs
     ) external;
+
 }

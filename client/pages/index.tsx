@@ -20,22 +20,14 @@ export default function Home() {
               </p>
 
               <p className="font-md font-mono text-black font-bold mt-2">
-                Revolutionizing Funding using Allo protocol together with Hats
-                and Sablier for Access Control and streaming of funds
+                Revolutionizing AI agent development with collaborative
+                creation, fine-tuning, and diverse applications. Incentivizes
+                top-performing agents and users using Chainlink automation and functions for
+                rewards in RAI tokens rocketAI's ERC20 standard.
               </p>
             </div>
             <div className="flex flex-col items-center">
-              <button
-                onClick={() =>
-                  window.open(
-                    "https://github.com/Architsharma7/Constellation",
-                    "_blank"
-                  )
-                }
-                className="mt-5 bg-gradient-to-r from-indigo-200 to bg-indigo-500 hover:from-indigo-500 hover:to-indigo-200 text-white font-bold py-2 px-4 rounded-full"
-              >
-                Source Code
-              </button>
+              <button onClick={() => window.open('https://github.com/Architsharma7/Constellation', '_blank')} className="mt-5 bg-gradient-to-r from-indigo-200 to bg-indigo-500 hover:from-indigo-500 hover:to-indigo-200 text-white font-bold py-2 px-4 rounded-full">Source Code</button>
             </div>
           </div>
 

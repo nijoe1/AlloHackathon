@@ -57,28 +57,35 @@ export const getUserOrganizations = async (address) => {
   for (const profile of profiles) {
     const adminHat = profile.adminHat;
     let data = encodePacked(["uint256"], [adminHat]);
+    console.log(data);
+
     let resp = await getProfileHats(data);
-    console.log(resp);
-    const searchAdmin = resp.hat.wearers[0].id == address?.toLowerCase();
-    if (searchAdmin) {
-      let data = await getProfilesData([profile.profileID]);
+    const searchAdmin = resp?.hat?.wearers[0]?.id == address?.toLowerCase();
+
+    if (searchAdmin === true) {
+      let data = await getProfilesData([profile?.profileID]);
       let obj = { profileData: data, type: "ADMIN" };
       partOfProfiles.push(obj);
       continue;
     }
-    if (resp?.hat?.subhats?.wearers) {
-      for (const wearer of resp.hat.subhats.wearers) {
+    console.log(resp?.hat);
+    if (resp?.hat?.subHats[0]?.wearers) {
+      for (const wearer of resp?.hat?.subHats[0]?.wearers) {
         if (wearer.id == address?.toLowerCase()) {
-          let data = await getProfilesData([profile.profileID]);
+          let data = await getProfilesData([profile?.profileID]);
           let obj = { profileData: data, type: "MANAGER" };
           partOfProfiles.push(obj);
           continue;
         }
       }
     }
-    if (resp?.hat?.subhats?.subhats?.wearers) {
-      for (const wearer of resp.hat.subhats.subhats.wearers) {
-        if (wearer.id == address?.toLowerCase()) {
+    if (resp?.hat?.subHats[0]?.subHats[0]?.wearers) {
+      console.log("checking");
+
+      for (const wearer of resp?.hat?.subHats[0]?.subHats[0]?.wearers) {
+        console.log("checking");
+
+        if (wearer?.id == address?.toLowerCase()) {
           let data = await getProfilesData([profile.profileID]);
           let obj = { profileData: data, type: "REVIEWER" };
           partOfProfiles.push(obj);
@@ -91,12 +98,31 @@ export const getUserOrganizations = async (address) => {
   return partOfProfiles;
 };
 
+export const fileToBase64 = async (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+      const base64String = event.target.result.split(",")[1]; // Extract the base64 part
+      resolve(base64String);
+    };
+
+    reader.onerror = (error) => {
+      reject(error);
+    };
+
+    if (file) {
+      reader.readAsDataURL(file); // Read the file as a data URL
+    } else {
+      reject(new Error("No file provided"));
+    }
+  });
+};
+
 export const getOrgMembers = async (profileID) => {
   const adminHat = await getProfileAdminHat(profileID);
-  console.log(adminHat);
   let data = encodePacked(["uint256"], [adminHat]);
   let resp = await getProfileHats(data);
-  console.log(resp);
   let res = parseHatObjectOneDimensional(resp);
   return res;
 };

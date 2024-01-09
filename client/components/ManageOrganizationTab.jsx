@@ -84,8 +84,8 @@ const ManageOrganizationTab = ({ orgID }) => {
   const assignNewRoles = async (newMembers) => {
     const roleToHatIndex = {
       Admin: 0,
-      Manager: 1,
-      Reviewer: 2,
+      Manager: 2,
+      Reviewer: 1,
     };
 
     const hatidArray = newMembers.map(({ role }) => Hats[roleToHatIndex[role]]);

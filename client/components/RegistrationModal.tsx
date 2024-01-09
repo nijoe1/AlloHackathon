@@ -60,9 +60,9 @@ const RegistrationModal = ({ isOpen, onClose, onSubmit, poolID }) => {
       let proj: React.SetStateAction<any[]> = [];
       const projects = orgs.map((org) => {
         proj.push({
-          name: org.profileData[0].name,
-          profileID: org.profileData[0].profileID,
-          metadata: org.profileData[0].ProfileMetadata,
+          name: org.profileData[0]?.name,
+          profileID: org.profileData[0]?.profileID,
+          metadata: org.profileData[0]?.ProfileMetadata,
         });
       });
       setProjects(proj);
@@ -70,7 +70,7 @@ const RegistrationModal = ({ isOpen, onClose, onSubmit, poolID }) => {
       // console.log(proj);
     }
     if (!fetched && isOpen) fetch();
-  });
+  }, [fetched, isOpen]);
 
   const registerProfileInPool = async (metadata: any) => {
     console.log(await formData.selectedProjectId);

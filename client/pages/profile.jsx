@@ -68,11 +68,9 @@ const OrganizationProfile = (profileID) => {
       let creatorMetadata = {};
       const processedPoolsPromises = pools.map(async (pool) => {
         let CID = pool.poolDetails.poolMetadata;
-        const metadataResponse = await axios.get(
-          `https://cloudflare-ipfs.com/ipfs/${CID}`
-        );
+        const metadataResponse = await axios.get(`https://ipfs.io/ipfs/${CID}`);
         const metadata = metadataResponse.data;
-
+        console.log(metadata);
         const time = await getTime();
         const poolState =
           time < pool.poolDetails.RETs
@@ -132,7 +130,7 @@ const OrganizationProfile = (profileID) => {
       const profile = await getProfileDetails(orgID);
       const pools = await getAllPoolsCreatedByProfile(orgID);
       let creatorMetadata = await axios.get(
-        `https://cloudflare-ipfs.com/ipfs/${profile[0].metadata}`
+        `https://ipfs.io/ipfs/${profile[0]?.metadata}`
       );
       setCreatorMetadata(creatorMetadata.data);
 
@@ -160,7 +158,11 @@ const OrganizationProfile = (profileID) => {
       >
         <AspectRatio ratio={1} w="150px" mb={4}>
           <Image
-            src={creatorMetadata.image ? creatorMetadata.image : "loading"}
+            src={
+              creatorMetadata.image
+                ? `data:image/jpeg;base64,${creatorMetadata.image}`
+                : "loading"
+            }
             alt="Pool Image"
             borderRadius="full"
           />
@@ -215,11 +217,7 @@ const OrganizationProfile = (profileID) => {
                     overflow="hidden"
                   >
                     <Image
-                      src={
-                        pool.metadata.image
-                          ? pool.metadata.image
-                          : "https://bit.ly/2Z4KKcF"
-                      }
+                      src={`data:image/png;base64,${pool.metadata.image}`}
                       alt={pool.metadata.name}
                     />
                   </AspectRatio>

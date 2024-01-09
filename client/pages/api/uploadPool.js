@@ -19,39 +19,23 @@ export default async function handler(req, res) {
 
   const form = new IncomingForm();
 
-  form.parse(req, async (err, fields, files) => {
+  form.parse(req, async (err, fields) => {
     if (err) {
       console.error("Error parsing the form data:", err);
       return res.status(500).send("Error parsing the form data");
     }
 
     try {
-      const file = files.file[0];
-      if (!file) {
-        throw new Error("File is undefined");
-      }
-
-      // Upload file to IPFS
-      const fileStream = fs.createReadStream(file.filepath);
-      const fileFormData = new FormData();
-      fileFormData.append("file", fileStream);
-      const fileResponse = await axios.post(
-        "https://api.pinata.cloud/pinning/pinFileToIPFS",
-        fileFormData,
-        {
-          headers: {
-            "Content-Type": `multipart/form-data; boundary=${fileFormData._boundary}`,
-            Authorization: `Bearer ${JWT}`,
-          },
-        }
-      );
-      fs.unlinkSync(file.filepath); // Delete the file after uploading
+      // const file = files.file[0];
+      // if (!file) {
+      //   throw new Error("File is undefined");
+      // }
 
       // Prepare JSON metadata
       const metadataFormData = {
         name: fields.name[0],
         description: fields.description[0],
-        image: `https://cloudflare-ipfs.com/ipfs/${fileResponse.data.IpfsHash}`, // Linking the image uploaded in the previous step
+        image: fields.image[0],
         tokenAddress: fields.tokenAddress[0],
         startingPoolAmount: fields.startingPoolAmount[0],
         allocationDurationDays: fields.allocationDurationDays[0],
@@ -74,7 +58,6 @@ export default async function handler(req, res) {
       );
 
       res.status(200).json({
-        fileCid: fileResponse.data.IpfsHash,
         metadataCid: metadataResponse.data.IpfsHash,
       });
     } catch (error) {

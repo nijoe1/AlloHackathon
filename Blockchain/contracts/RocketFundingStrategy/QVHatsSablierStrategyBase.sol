@@ -18,9 +18,7 @@ import {IRegistry} from "../interfaces/IRegistry.sol";
 // Core Contracts
 import {BaseStrategy} from "../BaseStrategy.sol";
 // // Internal Libraries
-// import {Metadata} from "../libraries/Metadata.sol";
-// Events
-import {Types, Metadata, IRegistryIndexer} from "../QV/Types/Types.sol";
+import {Types, Metadata, IRegistryIndexer} from "../interfaces/Types.sol";
 
 // ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣾⣿⣷⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⣿⣿⣷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣗⠀⠀⠀⢸⣿⣿⣿⡯⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 // ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣿⣿⣿⣿⣷⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⣿⣿⣿⣿⣿⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣗⠀⠀⠀⢸⣿⣿⣿⡯⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -379,7 +377,8 @@ abstract contract QVHatsSablierStrategyBase is BaseStrategy, Types {
                     i++;
                 }
             }
-            registryIndexer.InsertDistributions(poolId, amounts, streamIDs, _recipientIds);
+            registryIndexer.InsertDistributions(poolId, distributionPeriod, amounts, streamIDs, _recipientIds);
+            
         } else if (distributionPeriod == 2) {
             _distributeRoundTwo(_recipientIds, _sender);
         }
@@ -464,7 +463,7 @@ abstract contract QVHatsSablierStrategyBase is BaseStrategy, Types {
             }
         }
 
-        registryIndexer.InsertDistributions(poolId, amounts, streamIDs, _recipientIds);
+        registryIndexer.InsertDistributions(poolId, 2, amounts, streamIDs, _recipientIds);
     }
 
     /// ====================================
@@ -618,7 +617,7 @@ abstract contract QVHatsSablierStrategyBase is BaseStrategy, Types {
 
     function _checkOnlyPoolReviewer(address _sender) internal view virtual {
         if (
-            !hats.isWearerOfHat(_sender, reviewerHatId) ||
+            !hats.isWearerOfHat(_sender, reviewerHatId) &&
             !hats.isAdminOfHat(_sender, reviewerHatId)
         ) {
             revert UNAUTHORIZED();

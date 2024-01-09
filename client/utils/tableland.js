@@ -4,12 +4,12 @@ const TablelandGateway =
   "https://testnets.tableland.network/api/v1/query?statement=";
 
 const tables = {
-  pools: "pools_421614_413",
-  profilePools: "profilePools_421614_412",
-  profiles: "profiles_421614_411",
-  poolsReviews: "pools_reviews_421614_414",
-  poolsAllocations: "pools_allocations_421614_415",
-  poolsDistributions: "pools_distributions_421614_416",
+  pools: "pools_421614_425",
+  profilePools: "profilePools_421614_424",
+  profiles: "profiles_421614_423",
+  poolsReviews: "pools_reviews_421614_426",
+  poolsAllocations: "pools_allocations_421614_427",
+  poolsDistributions: "pools_distributions_421614_428",
 };
 
 export const getAllProfilesAdminHat = async () => {

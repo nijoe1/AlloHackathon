@@ -31,7 +31,7 @@ export default async function handler(req, res) {
         name: fields.name[0],
         description: fields.description[0],
         milestones: fields.milestones[0], // Linking the image uploaded in the previous step
-        metadata: `https://cloudflare-ipfs.com/ipfs/${fields.metadata[0]}`,
+        metadata: `https://ipfs.io/ipfs/${fields.metadata[0]}`,
       };
 
       // Upload JSON metadata to IPFS

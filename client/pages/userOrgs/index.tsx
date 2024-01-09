@@ -13,7 +13,7 @@ import {
 import { FaTwitter, FaGithub, FaGlobe } from "react-icons/fa";
 import Navbar from "@/components/navbar";
 import Loading from "@/components/Animation/Loading";
-import { getUserOrganizations } from "@/utils/utils";
+import { getUserOrganizations, formatCurrency } from "@/utils/utils";
 import {
   getAllPoolsCreatedByProfile,
   getAllPoolsRegisteredByProfile,
@@ -27,7 +27,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   async function fetchIPFSMetadata(ipfsHash: string) {
-    const metadataUrl = `https://cloudflare-ipfs.com/ipfs/${ipfsHash}`;
+    const metadataUrl = `https://ipfs.io/ipfs/${ipfsHash}`;
     try {
       const response = await fetch(metadataUrl);
       if (!response.ok) throw new Error("Failed to fetch IPFS metadata");
@@ -91,6 +91,8 @@ const Index = () => {
               transition="transform 0.2s, box-shadow 0.2s"
               _hover={{ transform: "scale(1.05)", boxShadow: "2xl" }}
               border="1px solid"
+              width={333}
+              height={500}
               borderColor="gray.200"
             >
               <Badge
@@ -102,6 +104,7 @@ const Index = () => {
                     : "blue"
                 }
                 fontSize="sm"
+                mb={3}
               >
                 {orgData.type}
               </Badge>
@@ -110,49 +113,52 @@ const Index = () => {
                   {orgData.profileData[0].name}
                 </Text>
                 <Image
-                  src={`${orgData.image}`}
+                  src={`data:image/png;base64,${orgData.image}`}
                   alt={orgData.profileData[0].name}
                   borderRadius="lg"
-                  w="100"
-                  h="100"
+                  w="120"
+                  h="120"
                   mt={2}
                 />
               </Box>
 
               <Box
                 p={3}
-                mt={5}
+                mt={10}
                 mb={1}
                 bg="gray.50"
                 rounded="md"
                 border="2px solid"
                 borderColor="gray.200"
               >
-                <Text fontSize="sm" color="gray.600" noOfLines={3}>
+                <Text fontSize="sm" color="gray.600" noOfLines={1}>
                   {orgData.description}
                 </Text>
               </Box>
 
               <Box mt={4} className="flex flex-col items-center">
-                <Badge colorScheme="green" fontSize="sm">
-                  Distributed {orgData.profileData[0].fundsDistributed} In{" "}
+                <Badge colorScheme="green" fontSize="2xsm">
+                  Funded{" "}
+                  {formatCurrency(orgData.profileData[0].fundsDistributed)} In{" "}
                   {orgData.profileData[0].poolsCreated} Pools
                 </Badge>
-                <Badge colorScheme="blue" fontSize="sm" mt={1}>
-                  Received {orgData.profileData[0].fundsReceived} From{" "}
+                <Badge colorScheme="blue" fontSize="2xsm" mt={1}>
+                  Received{" "}
+                  {formatCurrency(orgData.profileData[0].fundsReceived)} From{" "}
                   {orgData.profileData[0].poolsRegistered} Pools
                 </Badge>
               </Box>
 
               <Button
-                mt={4}
+                mt={9}
                 colorScheme="blue"
                 w="full"
+                
                 onClick={() =>
                   router.push({
-                    pathname: `/OrganizationProfile`,
+                    pathname: `/profile`,
                     query: {
-                      orgID:orgData.profileData[0].profileID,
+                      orgID: orgData?.profileData[0]?.profileID,
                       Access: orgData.type,
                     },
                   })

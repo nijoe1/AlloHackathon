@@ -18,6 +18,7 @@ import {
 } from "@chakra-ui/react";
 import { MdOutlineAttachFile, MdWeb } from "react-icons/md";
 import { FaGithub } from "react-icons/fa";
+import { fileToBase64 } from "@/utils/utils";
 
 import { BsTwitterX } from "react-icons/bs";
 
@@ -63,11 +64,15 @@ const Create = () => {
       return;
     }
 
-    const formData = new FormData();
-    if (file) {
-      formData.append("file", file);
-    }
+    const selectedFile = file;
 
+    let base64Image = await fileToBase64(selectedFile);
+
+    const formData = new FormData();
+
+    // Append other profile details to the form data
+
+    formData.append("image", String(base64Image));
     // Append other profile details to the form data
     formData.append("name", profileDetails.profileName);
     formData.append("description", profileDetails.profileDescription);
@@ -79,8 +84,7 @@ const Create = () => {
 
     try {
       const response = await axios.post("/api/uploadProfile", formData);
-      const { fileCid, metadataCid } = response.data;
-      console.log("File uploaded to IPFS with CID:", fileCid);
+      const { metadataCid } = response.data;
       console.log("Metadata uploaded to IPFS with CID:", metadataCid);
 
       setIsUploading(false); // Stop uploading

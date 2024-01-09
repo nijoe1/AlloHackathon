@@ -36,7 +36,7 @@ abstract contract RegistryIndexer {
 
     string private constant POOLS_SCHEMA =
         // SCHEMADESCRIPTION => "poolID text, strategyCOntractAddress, VotingReviewThreshold text, RoundOnePoolPercentage text,  registrationStartTime text, registrationEndTime text, allocationStartTime text, allocationEndTime text, projectsWorkingDuration text, projectsReviewDuration text";
-        "poolID text, strategy text, votesPerAllocator text, threshold text, ROP text, RSTs text, RETs text, ASTs text, AETs text, PWDs text, PRDs text";
+        "poolID text, strategy text, votesPerAllocator text, threshold text, ROP text, RSTs text, RETs text, AETs text, DONET text, PWDs text, PRDs text";
 
     string private constant POOLS_REVIEW_TABLE_PREFIX = "pools_reviews";
 
@@ -111,7 +111,7 @@ abstract contract RegistryIndexer {
             SQLHelpers.toInsert(
                 POOLS_TABLE_PREFIX,
                 tableID,
-                "poolID, strategy, votesPerAllocator, threshold, ROP, RSTs, RETs, ASTs, AETs, PWDs, PRDs",
+                "poolID, strategy, votesPerAllocator, threshold, ROP, RSTs, RETs, AETs, DONET, PWDs, PRDs",
                 string.concat(
                     SQLHelpers.quote(Strings.toString(poolID)),
                     ",",
@@ -127,9 +127,9 @@ abstract contract RegistryIndexer {
                     ",",
                     SQLHelpers.quote(Strings.toString(RET)),
                     ",",
-                    SQLHelpers.quote(Strings.toString(RET)),
-                    ",",
                     SQLHelpers.quote(Strings.toString(RET + input.allocationDuration)),
+                    ",",
+                    SQLHelpers.quote(""),
                     ",",
                     SQLHelpers.quote(Strings.toString(input.projectsWorkingDuration)),
                     ",",
@@ -141,6 +141,26 @@ abstract contract RegistryIndexer {
         address profileAddress = Registry.getProfileById(profileID).anchor;
 
         addProfileInPool(poolID, profileID, profileAddress, true, metadata);
+    }
+
+    function AddFirstDistributionTime(
+        uint256 poolID
+    ) internal {
+        mutate(
+            tableIDs[2],
+            SQLHelpers.toUpdate(
+                POOLS_TABLE_PREFIX,
+                tableIDs[2],
+                string.concat(
+                    "DONET=",
+                    SQLHelpers.quote(Strings.toString(block.timestamp))
+                ),
+                string.concat(
+                    "poolID=",
+                    SQLHelpers.quote(Strings.toString(poolID))
+                )
+            )
+        );
     }
 
     function addProfileInPool(

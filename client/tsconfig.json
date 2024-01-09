@@ -17,6 +17,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "components/Animation", "utils/tableland.js", "components/CreatePoolModal.tsx", "pages/pool.jsx", "components/ManageOrganizationTab.jsx", "pages/OrganizationProfile.jsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "components/Animation", "utils/tableland.js", "components/CreatePoolModal.tsx", "pages/pool.jsx", "components/ManageOrganizationTab.jsx", "pages/profile.jsx"],
   "exclude": ["node_modules"]
 }

@@ -28,13 +28,21 @@ const Navbar = () => {
                 CreateOrg
               </p>
             </div>
+            <div
+              onClick={() => router.push("/create")}
+              className="bg-white rounded-3xl px-2 py-1 mx-1 cursor-pointer"
+            >
+              <p className="text-center text-md font-semibold my-auto text-black">
+                ActivePools
+              </p>
+            </div>
           </div>
         </div>
         <div className="mt-4">
           <ConnectButton
-            accountStatus="address"
-            showBalance={true}
-            chainStatus="icon"
+            accountStatus="full"
+            showBalance={false}
+            chainStatus="full"
           />
         </div>
       </div>

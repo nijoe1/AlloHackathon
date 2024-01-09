@@ -14,10 +14,7 @@ import { FaTwitter, FaGithub, FaGlobe } from "react-icons/fa";
 import Navbar from "@/components/navbar";
 import Loading from "@/components/Animation/Loading";
 import { getUserOrganizations, formatCurrency } from "@/utils/utils";
-import {
-  getAllPoolsCreatedByProfile,
-  getAllPoolsRegisteredByProfile,
-} from "@/utils/tableland";
+
 import { useAccount } from "wagmi";
 
 const Index = () => {
@@ -52,15 +49,17 @@ const Index = () => {
           description: metadata?.description as string,
 
           image: metadata?.image,
+
+          twitter: metadata?.twitterLink,
+          website: metadata?.websiteLink,
+          github: metadata?.githubLink,
         };
         return obj;
       })
     );
 
-    await getAllPoolsCreatedByProfile(
-      orgsWithMetadata[0]?.profileData[0]?.profileID
-    );
     setOrganizations(orgsWithMetadata);
+    console.log(orgsWithMetadata);
     setIsLoading(false);
   }
 
@@ -69,29 +68,39 @@ const Index = () => {
   }, [account]);
 
   return (
-    <Box w="full" bg="gray.100">
-      <Navbar />
+    <Box
+      w="full"
+      className="bg-gradient-to-r from-gray-700 to-gray-800"
+      bg="bg-gradient-to-r from-gray-700 to-gray-800"
+    >
       {isLoading ? (
-        <Loading />
+        <Box
+          w="1/2"
+          className="bg-gradient-to-r from-gray-700 to-gray-800"
+          bg="bg-gradient-to-r from-gray-700 to-gray-800"
+        >
+          <Loading />
+        </Box>
       ) : (
         <Grid
           p={5}
           templateColumns="repeat(auto-fill, minmax(250px, 1fr))"
-          gap={6}
-          mt={{ base: "12%", md: "3%" }}
+          gap={50}
+          mt={{ base: "12%", md: "7%" }}
           mx="13%"
+          bg="gradient-to-r from-gray-700 to-gray-800"
         >
           {organizations.map((orgData, index) => (
             <GridItem
               key={index}
-              bg="white"
+              bg="gray.100"
               boxShadow="xl"
               p={5}
               rounded="xl"
               transition="transform 0.2s, box-shadow 0.2s"
               _hover={{ transform: "scale(1.05)", boxShadow: "2xl" }}
               border="1px solid"
-              width={333}
+              width={300}
               height={500}
               borderColor="gray.200"
             >
@@ -153,7 +162,6 @@ const Index = () => {
                 mt={9}
                 colorScheme="blue"
                 w="full"
-                
                 onClick={() =>
                   router.push({
                     pathname: `/profile`,

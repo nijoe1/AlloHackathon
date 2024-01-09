@@ -32,13 +32,23 @@ import { FaExternalLinkAlt } from "react-icons/fa";
 
 import ReactMarkdown from "react-markdown";
 
-import Navbar from "@/components/navbar";
+import Loading from "@/components/Animation/Loading";
 
 import RegistrationModal from "@/components/RegistrationModal";
 
 import { getPool } from "@/utils/tableland";
 
-import { calculateRemainingTime, formatCurrency } from "@/utils/utils";
+import {
+  calculateActualCredits,
+  calculateRemainingCreditsForAllocator,
+  formatCurrency,
+  processPoolStateAndRemainingTime,
+  calculateQuadraticVotingPercentages,
+  fetchRecipientMetadata,
+  sortRecipientsByPercentage,
+  getTime,
+  alreadyReviewedRecipient,
+} from "@/utils/utils";
 
 import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/constants/HackRegistry";
 
@@ -49,8 +59,6 @@ import { DAI_ABI, DAI_ADDRESS } from "@/constants/DAI";
 import { ALLO_CONTRACT_ABI, ALLO_CONTRACT_ADDRESS } from "@/constants/Allo";
 
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
-
-import { encodeFunctionData } from "viem";
 
 import { AbiCoder } from "ethers";
 
@@ -78,11 +86,56 @@ const Pool = () => {
       ...prev,
       [recipientID]: isSelected,
     }));
+    if (pool.poolState != "ProjectsRoundTwoEvaluation") {
+      handleReviewVoteChange(recipientID, 2);
+    } else {
+      handleReviewVoteChange(recipientID, 6);
+    }
   };
 
-  const reviewRecipients = async (recipients) => {
+  // Function to handle review vote changes
+  const handleReviewVoteChange = (recipientID, vote) => {
+    setReviewVotes((prevVotes) => ({ ...prevVotes, [recipientID]: vote }));
+    console.log(reviewVotes);
+  };
+
+  // Function to handle allocation vote changes
+  const handleAllocationVoteChange = (recipientAddress, vote) => {
+    setAllocationVotes((prev) => ({ ...prev, [recipientAddress]: vote }));
+  };
+
+  const handleViewRecipient = async (recipientID) => {
+    const recipient = recipients.find((r) => r.recipientID === recipientID);
+    if (recipient) {
+      const metadata = await fetchRecipientMetadata(recipient);
+      setSelectedRecipient({ ...recipient, metadata });
+      openModal();
+    }
+  };
+
+  const handleRegistrationSubmit = (formData) => {
+    console.log("Submitted data:", formData);
+    // Implement submission logic here
+  };
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+  const openRegModal = () => setRegModalOpen(true);
+  const closeRegModal = () => setRegModalOpen(false);
+
+  useEffect(() => {
+    console.log(allocationVotes);
+  }, [allocationVotes, selectedRecipients]);
+
+  const reviewRecipients = async (recipients, roundOne) => {
     const recipientIDs = Object.keys(recipients);
-    const votes = Object.values(recipients);
+    let votes = Object.values(recipients);
+    let roundTwoCancelations = [];
+    if (!roundOne) {
+      votes = votes.map((vote) => {
+        roundTwoCancelations.push(6);
+      });
+    }
     try {
       const data = await publicClient?.simulateContract({
         account,
@@ -183,104 +236,6 @@ const Pool = () => {
     }
   };
 
-  // Function to handle review vote changes
-  const handleReviewVoteChange = (recipientID, vote) => {
-    setReviewVotes((prevVotes) => ({ ...prevVotes, [recipientID]: vote }));
-    console.log(reviewVotes);
-  };
-
-  // Function to handle allocation vote changes
-  const handleAllocationVoteChange = (recipientAddress, vote) => {
-    setAllocationVotes((prev) => ({ ...prev, [recipientAddress]: vote }));
-  };
-
-  function calculateRemainingVotes() {
-    let remainingVotes = pool.poolDetails.votesPerAllocator;
-
-    pool.allocatorsInfo?.forEach((allocator) => {
-      allocator.allocations?.forEach((allocation) => {
-        if (allocation.recipientID === account.toLowerCase()) {
-          remainingVotes -= Math.sqrt(
-            allocation.totalVotesAllocated * 10 ** 18
-          );
-        }
-      });
-    });
-
-    return remainingVotes;
-  }
-
-  useEffect(() => {
-    // Do something with allocationVotes
-    console.log(allocationVotes);
-  }, [allocationVotes]); // Dependency array ensures this runs when allocationVotes changes
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
-  const openRegModal = () => setRegModalOpen(true);
-  const closeRegModal = () => setRegModalOpen(false);
-
-  const fetchRecipientMetadata = async (recipient) => {
-    const metadataResponse = await axios.get(
-      `https://ipfs.io/ipfs/${recipient.metadata}`
-    );
-    return metadataResponse.data;
-  };
-
-  function sortRecipientsByPercentage(recipients) {
-    recipients.sort((a, b) => {
-      const percentageA = (a.totalVotesReceived / a.totalVotesAllocated) * 100;
-      const percentageB = (b.totalVotesReceived / b.totalVotesAllocated) * 100;
-      return percentageB - percentageA; // Sort in descending order
-    });
-  }
-
-  const handleViewRecipient = async (recipientID) => {
-    const recipient = recipients.find((r) => r.recipientID === recipientID);
-    if (recipient) {
-      const metadata = await fetchRecipientMetadata(recipient);
-      setSelectedRecipient({ ...recipient, metadata });
-      openModal();
-    }
-  };
-
-  const handleRegistrationSubmit = (formData) => {
-    console.log("Submitted data:", formData);
-    // Implement submission logic here
-  };
-
-  const getTime = async () => {
-    const time = await publicClient.readContract({
-      address: CONTRACT_ADDRESS,
-      abi: CONTRACT_ABI,
-      functionName: "getTime",
-    });
-    return time;
-  };
-
-  function alreadyReviewedRecipient(recipient) {
-    try {
-      return recipient.reviews.some(
-        (review) => review.reviewedBy === account.toLowerCase()
-      );
-    } catch {
-      return false;
-    }
-  }
-
-  function IsSecondDistributionDone(recipients) {
-    for (const recipient of recipients) {
-      const secondDistribution = recipient.distributions.find(
-        (distribution) => distribution.streamID === "0"
-      );
-
-      if (secondDistribution) {
-        return true; // Found a recipient with a second distribution with streamID "0"
-      }
-    }
-
-    return false; // No recipient with a second distribution with streamID "0" found
-  }
-
   const processPoolsWithMetadata = async (pools) => {
     const processedPools = [];
 
@@ -295,42 +250,10 @@ const Pool = () => {
 
         const time = await getTime();
         let poolState;
-
-        if (time <= pool.poolDetails.RETs) {
-          poolState = "RegistrationPeriod";
-        } else if (time <= pool.poolDetails.AETs) {
-          poolState = "AllocationPeriod";
-        } else if (pool.poolDetails.DistributionStartTime === 0) {
-          poolState = "WaitingForStreamDistribution";
-        } else if (
-          pool.poolDetails.DistributionStartTime + pool.poolDetails.PWDs <=
-            time &&
-          !IsSecondDistributionDone(pool.registeredRecipients)
-        ) {
-          poolState = "WaitingForFinalDistribution";
-        } else {
-          poolState = "Pool Disabled";
-        }
-
         let remainingTime;
-        if (poolState === "WorkingPeriod") {
-          remainingTime = calculateRemainingTime(
-            time,
-            BigInt(pool.poolDetails.DistributionStartTime) +
-              BigInt(pool.poolDetails.PWDs)
-          );
-        } else if (poolState === "AllocationPeriod") {
-          remainingTime = calculateRemainingTime(
-            time,
-            BigInt(pool.poolDetails.AETs)
-          );
-        } else {
-          remainingTime = calculateRemainingTime(
-            time,
-            BigInt(pool.poolDetails.RETs)
-          );
-        }
-
+        let res = processPoolStateAndRemainingTime(pool, time);
+        poolState = res.poolState;
+        remainingTime = res.remainingTime;
         let poolAmount1 = await publicClient.readContract({
           address: DAI_ADDRESS,
           abi: DAI_ABI,
@@ -362,13 +285,18 @@ const Pool = () => {
       const processedPools = await processPoolsWithMetadata([pooll[0]]);
       console.log(processedPools);
       setPool(processedPools[0]);
-      let registrants = processedPools[0].registeredRecipients;
+      let registrants = processedPools[0]?.registeredRecipients;
       let totalVotesAllocated =
-        processedPools[0].poolDetails.totalVotesAllocated;
-      registrants.forEach((registrant) => {
-        let totalVotesReceived = registrant.totalVotesReceived;
-        registrant.poolPercentage = totalVotesReceived / totalVotesAllocated;
-      });
+        processedPools[0]?.poolDetails.totalVotesAllocated;
+
+      if (processedPools[0]?.allocatorsInfo && registrants) {
+        let percentages = calculateQuadraticVotingPercentages(
+          processedPools[0].allocatorsInfo
+        );
+        registrants.forEach((registrant) => {
+          registrant.poolPercentage = percentages[registrant.recipientID];
+        });
+      }
 
       sortRecipientsByPercentage(registrants);
       setRecipients(registrants);
@@ -379,281 +307,338 @@ const Pool = () => {
   }, [poolID]);
 
   return (
-    <Box w="full">
-      <Navbar />
-      <Flex
-        direction="column"
-        align="center"
-        bg="blue.200"
-        p={6}
-        mx="20%"
-        color="white"
-        mt={8}
-        borderRadius="lg"
-        boxShadow="md"
-      >
-        <AspectRatio ratio={1} w="150px" mb={4}>
-          <Image
-            src={
-              detailsFetched
-                ? `data:image/png;base64,${pool.metadata.image}`
-                : "https://ipfs.io/ipfs/Qmf9bVdXsccGcuissvdKdkW4fkm8mhh37EDtEqZDeiGqZX"
-            }
-            alt="Pool Image"
-            borderRadius="full"
-          />
-        </AspectRatio>
-        <Text fontSize="3xl" fontWeight="bold">
-          {detailsFetched ? pool.metadata.name : "Loading Pool Name..."}
-        </Text>
-        <Text fontSize="md">
-          {detailsFetched
-            ? pool.metadata.description
-            : "Loading Description..."}
-        </Text>
-        <Badge
-          colorScheme={
-            pool.poolState === "RegistrationPeriod" ? "green" : "red"
-          }
-        >
-          {pool.poolState} {pool.remainingTime}
-        </Badge>
-        <Stack direction="row" spacing={4} mt={4}>
-          <Text>Round One Distribution: {pool.poolDetails?.ROP}%</Text>
-          <Text>Pool Amount: {pool.poolAmount} DAI</Text>
-        </Stack>
-        {pool.poolState == "RegistrationPeriod" && (
-          <Button colorScheme="blue" mt={4} onClick={openRegModal}>
-            Register
-          </Button>
-        )}
-      </Flex>
-
-      <RegistrationModal
-        isOpen={isRegModalOpen}
-        onClose={closeRegModal}
-        onSubmit={handleRegistrationSubmit}
-        poolID={poolID}
-      />
-
-      <Box className="flex flex-col items-center " mx="30%" my={3}>
-        {(Access == "ADMIN" || Access == "MANAGER" || Access == "REVIEWER") && (
-          <Box mx="10%" my={3} className="flex flex-col items-center">
-            <Text fontSize="l" fontWeight="bold">
-              {pool.poolState == "RegistrationPeriod"
-                ? "Review Projects"
-                : pool.poolState == "AllocationPeriod"
-                ? "Allocate Votes"
-                : "Working Period"}
-            </Text>
-            <div className="flex flex-wrap items-center">
-              <Switch
-                colorScheme="green"
-                defaultChecked={toggleReview}
-                onChange={(e) => {
-                  setToggleReview(!toggleReview);
-                  // Update your review object here as needed
-                }}
-              />
-            </div>
-          </Box>
-        )}
-        <Table variant="simple" colorScheme="black">
-          <Thead>
-            <Tr>
-              <Th>Project</Th>
-              <Th>Status</Th>
-              {pool.poolState != "RegistrationPeriod" && (
-                <Th isNumeric>Allocations %</Th>
+    <div className="bg-gradient-to-r from-gray via-gray to-gray-800">
+      {detailsFetched && pool ? (
+        <div>
+          <Box w="full">
+            <Flex
+              direction="column"
+              align="center"
+              bg="gray.100"
+              className="text-black font-bold"
+              p={6}
+              mx="35%"
+              mt={"5%"}
+              borderRadius="lg"
+              boxShadow="md"
+            >
+              <AspectRatio ratio={1} w="150px" mb={4}>
+                <Image
+                  src={
+                    detailsFetched
+                      ? `data:image/png;base64,${pool?.metadata.image}`
+                      : "https://ipfs.io/ipfs/Qmf9bVdXsccGcuissvdKdkW4fkm8mhh37EDtEqZDeiGqZX"
+                  }
+                  alt="Pool Image"
+                  borderRadius="full"
+                />
+              </AspectRatio>
+              <Text fontSize="3xl" fontWeight="bold">
+                {detailsFetched ? pool?.metadata.name : "Loading Pool Name..."}
+              </Text>
+              <Text fontSize="md">
+                {detailsFetched
+                  ? pool.metadata.description
+                  : "Loading Description..."}
+              </Text>
+              <Badge
+                colorScheme={
+                  pool.poolState === "RegistrationPeriod" ? "green" : "red"
+                }
+              >
+                {pool.poolState} {pool.remainingTime}
+              </Badge>
+              <Stack direction="row" spacing={4} mt={4}>
+                <Text>Round One Distribution: {pool.poolDetails?.ROP}%</Text>
+                <Text>Pool Amount: {pool.poolAmount} DAI</Text>
+              </Stack>
+              {pool.poolState == "RegistrationPeriod" && (
+                <Button colorScheme="blue" mt={4} onClick={openRegModal}>
+                  Apply in pool
+                </Button>
               )}
-              {(Access == "MANAGER" ||
-                Access == "ADMIN" ||
-                Access == "REVIEWER") &&
-                (pool.poolState == "RegistrationPeriod" ||
-                  pool.poolState == "AllocationPeriod") &&
-                toggleReview && <Th>Accept?</Th>}
-              {(Access === "MANAGER" || Access === "ADMIN") &&
-                pool.poolState == "AllocationPeriod" &&
-                toggleReview && <Th>AllocateVotes</Th>}
-              <Th>Details</Th>
-              {toggleReview && <Th>Select</Th>}
-            </Tr>
-          </Thead>
-          <Tbody>
-            {recipients.map(
-              (recipient, index) =>
-                (recipient.reviewStatusRoundOne === "Accepted" ||
-                  recipient.reviewStatusRoundOne === "Pending") && (
-                  <Tr key={index}>
-                    <Td>
-                      <Flex align="center">
-                        <Text mr={2}>{recipient.name}</Text>
-                        <ChakraLink
-                          as={Button}
-                          onClick={() =>
-                            router.push(`/profile/${recipient.recipientID}`)
-                          }
-                        >
-                          <FaExternalLinkAlt />
-                        </ChakraLink>
-                      </Flex>
-                    </Td>
-                    <Td>
-                      <Badge
-                        colorScheme={
-                          recipient.reviewStatusRoundOne === "Accepted"
-                            ? "green"
-                            : recipient.reviewStatusRoundOne === "Rejected"
-                            ? "red"
-                            : "yellow"
-                        }
-                      >
-                        {recipient.reviewStatusRoundOne}
-                      </Badge>
-                    </Td>
-                    {pool.poolState != "RegistrationPeriod" && (
-                      <Td isNumeric>{recipient.poolPercentage * 100}%</Td>
-                    )}
-                    {(Access == "MANAGER" ||
-                      Access == "ADMIN" ||
-                      Access == "REVIEWER") &&
-                      (pool.poolState == "RegistrationPeriod" ||
-                        pool.poolState == "AllocationPeriod") &&
-                      toggleReview && (
-                        <Td textAlign="center">
-                          <Switch
-                            colorScheme="green"
-                            defaultChecked={true}
-                            disabled={
-                              (!selectedRecipients[
-                                recipient.recipientAddress
-                              ] ||
-                                recipient.reviewStatusRoundOne == "Accepted" ||
-                                recipient.reviewStatusRoundOne == "Rejected") &&
-                              alreadyReviewedRecipient(recipient)
-                            }
-                            onChange={(e) => {
-                              handleReviewVoteChange(
-                                recipient.recipientAddress,
-                                e.target.checked ? 2 : 3
-                              );
-                            }}
-                          />
-                        </Td>
-                      )}
-                    {(Access === "MANAGER" || Access === "ADMIN") &&
-                      pool.poolState == "AllocationPeriod" &&
-                      toggleReview && (
-                        <Td textAlign="center">
-                          <Input
-                            type="number"
-                            size="sm"
-                            width="100px"
-                            disabled={
-                              !selectedRecipients[recipient.recipientAddress]
-                            }
-                            onChange={(e) => {
-                              handleAllocationVoteChange(
-                                recipient.recipientAddress,
-                                e.target.value
-                              );
-                              // Update your allocation object here as needed
-                            }}
-                          />
-                        </Td>
-                      )}
-                    <Td textAlign="center">
-                      <Button
-                        onClick={() =>
-                          handleViewRecipient(recipient.recipientID)
-                        }
-                      >
-                        View
-                      </Button>
-                    </Td>
-                    {toggleReview && (
-                      <Td textAlign="center">
-                        <Checkbox
-                          onChange={(e) =>
-                            handleRecipientSelection(
-                              recipient.recipientAddress,
-                              e.target.checked
-                            )
-                          }
-                        />
-                      </Td>
-                    )}
-                  </Tr>
-                )
-            )}
-          </Tbody>
-        </Table>
-        <div></div>
-      </Box>
-      <Box w="full" className="flex flex-col items-center mt-5">
-        {pool.poolState == "RegistrationPeriod" ? (
-          <Button
-            colorScheme="blue"
-            onClick={async () => {
-              await reviewRecipients(reviewVotes);
-            }}
-          >
-            Review
-          </Button>
-        ) : pool.poolState == "AllocationPeriod" ? (
-          <div>
-            {" "}
-            <Button
-              onClick={async () => {
-                await AllocateVotes(allocationVotes);
-              }}
-            >
-              {`Allocate`}
-            </Button>
-            <Text>Remaining Votes: {calculateRemainingVotes()}</Text>
-          </div>
-        ) : (
-          <div>
-            <Button
-              colorScheme="blue"
-              onClick={async () => {
-                await Distribute();
-              }}
-            >
-              Distribute
-            </Button>
-          </div>
-        )}
-      </Box>
+            </Flex>
 
-      {/* Recipient Details Modal */}
-      <Modal isOpen={isModalOpen} onClose={closeModal} size="xl">
-        <ModalOverlay />
-        <ModalContent my="auto">
-          <ModalHeader>{selectedRecipient?.metadata.name}</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <ReactMarkdown>
-              {selectedRecipient?.metadata.description}
-            </ReactMarkdown>
-            {/* Markdown for milestones */}
-            <ReactMarkdown>
-              {selectedRecipient?.metadata.milestones}
-            </ReactMarkdown>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+            <RegistrationModal
+              isOpen={isRegModalOpen}
+              onClose={closeRegModal}
+              onSubmit={handleRegistrationSubmit}
+              poolID={poolID}
+            />
 
-      {/* Registration Modal (existing logic) */}
-      <RegistrationModal
-        isOpen={
-          detailsFetched && pool.reviewStatusRoundOne === "RegistrationPeriod"
-        }
-        onClose={closeModal}
-        poolID={poolID}
-        onSubmit={handleRegistrationSubmit}
-      />
-    </Box>
+            <Box className="flex flex-col items-center " mx="30%" my={3}>
+              {(Access == "ADMIN" ||
+                Access == "MANAGER" ||
+                Access == "REVIEWER") && (
+                <Box mx="10%" my={3} className="flex flex-col items-center">
+                  <Text fontSize="l" fontWeight="bold">
+                    {pool.poolState == "RegistrationPeriod"
+                      ? "Review Projects"
+                      : pool.poolState == "AllocationPeriod"
+                      ? "Allocate Votes"
+                      : "Working Period"}
+                  </Text>
+                  <div className="flex flex-wrap items-center">
+                    <Switch
+                      colorScheme="blue"
+                      defaultChecked={toggleReview}
+                      onChange={(e) => {
+                        setToggleReview(!toggleReview);
+                        // Update your review object here as needed
+                      }}
+                    />
+                  </div>
+                </Box>
+              )}
+              <Box
+                mx="10%"
+                my={3}
+                className="flex flex-col items-center bg-gray-100 rounded-xl"
+              >
+                <Table variant="simple" colorScheme="black">
+                  <Thead>
+                    <Tr>
+                      <Th>Project</Th>
+                      <Th>Status</Th>
+                      {pool.poolState != "RegistrationPeriod" && (
+                        <Th isNumeric>Allocations %</Th>
+                      )}
+                      {(Access == "MANAGER" ||
+                        Access == "ADMIN" ||
+                        Access == "REVIEWER") &&
+                        (pool.poolState == "RegistrationPeriod" ||
+                          pool.poolState == "AllocationPeriod") &&
+                        toggleReview && <Th>Accept?</Th>}
+                      {(Access === "MANAGER" || Access === "ADMIN") &&
+                        pool.poolState == "AllocationPeriod" &&
+                        toggleReview && <Th>AllocateVotes</Th>}
+                      <Th>Details</Th>
+                      {toggleReview && <Th>Select</Th>}
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {recipients.map(
+                      (recipient, index) =>
+                        (recipient.reviewStatusRoundOne === "Accepted" ||
+                          recipient.reviewStatusRoundOne === "Pending") && (
+                          <Tr key={index}>
+                            <Td>
+                              <Flex align="center">
+                                <Text mr={2}>{recipient.name}</Text>
+                                <ChakraLink
+                                  as={Button}
+                                  onClick={() => {
+                                    router.push({
+                                      pathname: `/profile/`,
+                                      query: {
+                                        orgID: recipient.recipientID,
+                                      },
+                                    });
+                                  }}
+                                >
+                                  <FaExternalLinkAlt />
+                                </ChakraLink>
+                              </Flex>
+                            </Td>
+                            <Td>
+                              <Badge
+                                colorScheme={
+                                  recipient.reviewStatusRoundOne === "Accepted"
+                                    ? "green"
+                                    : recipient.reviewStatusRoundOne ===
+                                      "Rejected"
+                                    ? "red"
+                                    : "yellow"
+                                }
+                              >
+                                {recipient.reviewStatusRoundOne}
+                              </Badge>
+                            </Td>
+                            {pool.poolState != "RegistrationPeriod" && (
+                              <Td isNumeric>
+                                {(recipient.poolPercentage * 100).toFixed(2)}%
+                              </Td>
+                            )}
+                            {(Access === "MANAGER" ||
+                              Access === "ADMIN" ||
+                              Access === "REVIEWER") &&
+                              (pool.poolState == "AllocationPeriod" ||
+                                pool.poolState == "RegistrationPeriod" ||
+                                pool.poolState ==
+                                  "ProjectsRoundTwoEvaluation") &&
+                              toggleReview && (
+                                <Td textAlign="center">
+                                  <Switch
+                                    colorScheme="blue"
+                                    defaultChecked={true}
+                                    disabled={
+                                      (!selectedRecipients[
+                                        recipient.recipientAddress
+                                      ] ||
+                                        recipient.reviewStatusRoundOne ==
+                                          "Accepted" ||
+                                        recipient.reviewStatusRoundOne ==
+                                          "Rejected") &&
+                                      alreadyReviewedRecipient(recipient)
+                                    }
+                                    onChange={(e) => {
+                                      handleReviewVoteChange(
+                                        recipient.recipientAddress,
+                                        e.target.checked ? 2 : 3
+                                      );
+                                    }}
+                                  />
+                                </Td>
+                              )}
+                            {(Access === "MANAGER" || Access === "ADMIN") &&
+                              pool.poolState == "AllocationPeriod" &&
+                              toggleReview && (
+                                <Td textAlign="center">
+                                  <Input
+                                    type="number"
+                                    size="sm"
+                                    width="100px"
+                                    disabled={
+                                      !selectedRecipients[
+                                        recipient.recipientAddress
+                                      ]
+                                    }
+                                    onChange={(e) => {
+                                      handleAllocationVoteChange(
+                                        recipient.recipientAddress,
+                                        e.target.value
+                                      );
+                                      // Update your allocation object here as needed
+                                    }}
+                                  />
+                                </Td>
+                              )}
+                            <Td textAlign="center">
+                              <Button
+                                onClick={() =>
+                                  handleViewRecipient(recipient.recipientID)
+                                }
+                              >
+                                View
+                              </Button>
+                            </Td>
+                            {toggleReview && (
+                              <Td textAlign="center">
+                                <Checkbox
+                                  colorScheme="blue"
+                                  className="border border-black rounded-sm"
+                                  onChange={(e) =>
+                                    handleRecipientSelection(
+                                      recipient.recipientAddress,
+                                      e.target.checked
+                                    )
+                                  }
+                                />
+                              </Td>
+                            )}
+                          </Tr>
+                        )
+                    )}
+                  </Tbody>
+                </Table>
+              </Box>
+              <div></div>
+            </Box>
+            <Box w="full" className="flex flex-col items-center mt-5">
+              {pool.poolState == "RegistrationPeriod" ? (
+                <Button
+                  colorScheme="blue"
+                  onClick={async () => {
+                    await reviewRecipients(reviewVotes, true);
+                  }}
+                >
+                  Review
+                </Button>
+              ) : pool.poolState == "AllocationPeriod" ? (
+                <div className="flex flex-col items-center">
+                  {" "}
+                  <Button
+                    colorScheme="blue"
+                    onClick={async () => {
+                      await AllocateVotes(allocationVotes);
+                    }}
+                  >
+                    {`Allocate`}
+                  </Button>
+                  <Text>
+                    Remaining Votes:{" "}
+                    {calculateRemainingCreditsForAllocator(
+                      pool.allocatorsInfo,
+                      account?.toLowerCase(),
+                      pool.poolDetails?.votesPerAllocator
+                    )?.toFixed(0)}
+                  </Text>
+                </div>
+              ) : pool.poolState == "ProjectsRoundTwoEvaluation" ? (
+                <div>
+                  <Button
+                    colorScheme="blue"
+                    onClick={async () => {
+                      await reviewRecipients(reviewVotes, false);
+                    }}
+                  >
+                    Cancel Projects
+                  </Button>
+                </div>
+              ) : (
+                <div>
+                  <Button
+                    colorScheme="blue"
+                    onClick={async () => {
+                      await Distribute();
+                    }}
+                  >
+                    Distribute
+                  </Button>
+                </div>
+              )}
+            </Box>
+
+            {/* Recipient Details Modal */}
+            <Modal isOpen={isModalOpen} onClose={closeModal} size="xl">
+              <ModalOverlay />
+              <ModalContent my="auto">
+                <ModalHeader>{selectedRecipient?.metadata.name}</ModalHeader>
+                <ModalCloseButton />
+                <ModalBody>
+                  <ReactMarkdown>
+                    {selectedRecipient?.metadata.description}
+                  </ReactMarkdown>
+                  {/* Markdown for milestones */}
+                  <ReactMarkdown>
+                    {selectedRecipient?.metadata.milestones}
+                  </ReactMarkdown>
+                </ModalBody>
+              </ModalContent>
+            </Modal>
+
+            {/* Registration Modal (existing logic) */}
+            <RegistrationModal
+              isOpen={
+                detailsFetched &&
+                pool.reviewStatusRoundOne === "RegistrationPeriod"
+              }
+              onClose={closeModal}
+              poolID={poolID}
+              onSubmit={handleRegistrationSubmit}
+            />
+          </Box>
+        </div>
+      ) : (
+        <Box
+          w="1/2"
+          className="bg-gradient-to-r from-gray-700 to-gray-800"
+          bg="bg-gradient-to-r from-gray-700 to-gray-800"
+        >
+          <Loading />
+        </Box>
+      )}
+    </div>
   );
 };
 

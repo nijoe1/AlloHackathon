@@ -20,14 +20,16 @@ const ProjectDetailsModal = ({ project, isOpen, onClose }) => {
       <ModalContent>
         <ModalHeader>{project.name}</ModalHeader>
         <ModalCloseButton />
-        <ModalBody>
+        <ModalBody className="background-gray-200">
           <Box mb={4}>
             <Image
               src={`data:image/png;base64,${project.image}`}
               borderRadius="lg"
             />
           </Box>
-          <ReactMarkdown>{project.description}</ReactMarkdown>
+          <ReactMarkdown className="background-gray-200">
+            {project.description}
+          </ReactMarkdown>
           {/* You can add more project details here */}
         </ModalBody>
       </ModalContent>

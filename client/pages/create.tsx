@@ -176,11 +176,10 @@ const Create = () => {
 
   return (
     <Box
-      className="bg-gradient-to-r from-white via-white to-rose-100"
+      className="bg-gradient-to-r from-gray via-gray to-gray-800"
       w="full"
       h="100vh"
     >
-      <Navbar />
       <VStack mt="20" spacing="4" align="stretch">
         <Box
           w="50%"
@@ -189,7 +188,9 @@ const Create = () => {
           p="6"
           borderRadius="xl"
           border="2px"
-          borderColor="gray.200"
+          borderColor="gray.100"
+          mt={20}
+          className="bg-gray-100"
           boxShadow="md"
         >
           <Text fontSize="2xl" fontWeight="semibold" textAlign="center" mb="4">

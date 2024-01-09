@@ -17,7 +17,7 @@ import {
   Center,
 } from "@chakra-ui/react";
 
-import ManageOrganizationTab from "@/components/ManageOrganizationTab";
+import ManageOrganizationTab from "./ManageOrganizationTab";
 import CreatePoolModal from "./CreatePoolModal";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 
@@ -43,7 +43,7 @@ const ConfigureOrganizationModal = ({ profileID }) => {
 
   return (
     <>
-      <Button onClick={onOpen}>Configure Organization</Button>
+      <Button colorScheme={"blue"}onClick={onOpen}>Configure Organization</Button>
       <Modal isOpen={isOpen} onClose={onClose} isCentered size="4xl">
         <ModalOverlay />
         <ModalContent>

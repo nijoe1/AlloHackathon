@@ -27,7 +27,7 @@ const RegistrationModal = ({ isOpen, onClose, onSubmit, poolID }) => {
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
 
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState([]);
   const [fetched, setFetched] = useState(false);
   const { address: account } = useAccount();
   const [formData, setFormData] = useState({
@@ -57,7 +57,7 @@ const RegistrationModal = ({ isOpen, onClose, onSubmit, poolID }) => {
     async function fetch() {
       const orgs = await getUserAdminOrgs(account);
       console.log(orgs);
-      let proj: React.SetStateAction<any[]> = [];
+      let proj = [];
       const projects = orgs.map((org) => {
         proj.push({
           name: org.profileData[0]?.name,
@@ -72,7 +72,7 @@ const RegistrationModal = ({ isOpen, onClose, onSubmit, poolID }) => {
     if (!fetched && isOpen) fetch();
   }, [fetched, isOpen]);
 
-  const registerProfileInPool = async (metadata: any) => {
+  const registerProfileInPool = async (metadata) => {
     console.log(await formData.selectedProjectId);
     try {
       const data = await publicClient?.simulateContract({
@@ -82,7 +82,7 @@ const RegistrationModal = ({ isOpen, onClose, onSubmit, poolID }) => {
         functionName: "registerRecipient",
         args: [
           poolID,
-          formData.selectedProjectId as `0x${string}`,
+          formData.selectedProjectId ,
           {
             protocol: BigInt(1),
             pointer: metadata,
@@ -124,7 +124,7 @@ const RegistrationModal = ({ isOpen, onClose, onSubmit, poolID }) => {
     formData2.append("name", formData.projectName);
     formData2.append("description", formData.description);
     formData2.append("milestones", formData.milestones);
-    formData2.append("metadata", formData.selectedProjectMetadata as string);
+    formData2.append("metadata", formData.selectedProjectMetadata);
 
     setIsUploading(true); // Start uploading
 

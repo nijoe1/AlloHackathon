@@ -49,9 +49,6 @@ const OrganizationProfile = (profileID) => {
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
 
-  const bgColor = useColorModeValue("gray.100", "gray.700");
-  const boxBgColor = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.300", "gray.600");
 
   const getTime = async () => {
     const time = await publicClient.readContract({
@@ -143,16 +140,15 @@ const OrganizationProfile = (profileID) => {
   }, [orgID, detailsFetched]);
 
   return (
-    <Box bg={bgColor} w="full">
-      <Navbar />
+    <Box bg="gray.700" w="full">
       <Flex
         direction="column"
         align="center"
-        bg="blue.200"
+        bg="gray.100"
         p={6}
-        mx="10%"
-        color="white"
-        mt={8}
+        mx="35%"
+        mt="3.2%"
+        color="gray.100"
         borderRadius="lg"
         boxShadow="md"
       >
@@ -179,17 +175,19 @@ const OrganizationProfile = (profileID) => {
           <Badge colorScheme="green">Total Distributed: $500K</Badge>
           <Badge colorScheme="blue">Total Received: $200K</Badge>
         </Stack>
-        <div className="flex flex-col items-center mt-5">
-          <ConfigureOrganizationModal profileID={orgID} />
-        </div>
+        {Access == "ADMIN" && (
+          <div className="flex flex-col items-center mt-5">
+            <ConfigureOrganizationModal profileID={orgID} />
+          </div>
+        )}
       </Flex>
 
       <Tabs isFitted variant="enclosed" colorScheme="blue" my={4}>
         <TabList mb="1em" mx={"20%"}>
-          <Tab _selected={{ color: "white", bg: "blue.500" }}>
+          <Tab _selected={{ color: "gray.100", bg: "blue.500" }}>
             Created Pools
           </Tab>
-          <Tab _selected={{ color: "white", bg: "blue.500" }}>
+          <Tab _selected={{ color: "gray.100", bg: "blue.500" }}>
             Registered Pools
           </Tab>
         </TabList>
@@ -200,11 +198,12 @@ const OrganizationProfile = (profileID) => {
               gap={6}
               px={4}
               mx={"20%"}
+              mb={"4%"}
             >
               {createdPools.map((pool, index) => (
                 <VStack
                   key={index}
-                  bg={boxBgColor}
+                  bg={"gray.100"}
                   boxShadow="md"
                   p={5}
                   rounded="lg"
@@ -256,7 +255,7 @@ const OrganizationProfile = (profileID) => {
                     </div>
                   </Stack>
                   <Button
-                    colorScheme="teal"
+                    colorScheme="blue"
                     onClick={() =>
                       router.push({
                         pathname: `/pool`,

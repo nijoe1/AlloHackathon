@@ -1,5 +1,3 @@
-
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,7 +6,6 @@
 
 @layer base {
   html {
-    @apply bg-gradient-to-r from-white via-white to-rose-100;
+    @apply bg-gradient-to-r from-gray-700 to-gray-800;
   }
 }
-

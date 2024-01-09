@@ -7,9 +7,12 @@ import {
   getProfilesData,
   getProfileAdminHat,
 } from "@/utils/tableland";
+import axios from "axios";
+import { getPublicClient } from "wagmi/actions";
 
-import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/constants/HackRegistry";
+
+const publicClient = getPublicClient();
 
 export const formatCurrency = (value) => {
   value = BigInt(value) / BigInt(10 ** 18);
@@ -180,4 +183,192 @@ export const getUserAdminOrgs = async (address) => {
   }
 
   return partOfProfiles;
+};
+
+export const processPoolStateAndRemainingTime = (pool, currentTime) => {
+  let poolState;
+  let remainingTime = 0;
+
+  if (currentTime <= BigInt(pool.poolDetails.RETs)) {
+    poolState = "RegistrationPeriod";
+    remainingTime = calculateRemainingTime(
+      currentTime,
+      BigInt(pool.poolDetails.RETs)
+    );
+  } else if (currentTime <= BigInt(pool.poolDetails.AETs)) {
+    poolState = "AllocationPeriod";
+    remainingTime = calculateRemainingTime(
+      currentTime,
+      BigInt(pool.poolDetails.AETs)
+    );
+  } else if (pool.poolDetails.DistributionStartTime == 0) {
+    poolState = "WaitingForStreamDistribution";
+    // Assuming no time limit for this state, or set a specific end time if applicable
+  } else if (
+    currentTime <
+    BigInt(pool.poolDetails.DistributionStartTime) +
+      BigInt(pool.poolDetails.PWDs)
+  ) {
+    poolState = "WorkingPeriod";
+    remainingTime = calculateRemainingTime(
+      currentTime,
+      BigInt(pool.poolDetails.DistributionStartTime) +
+        BigInt(pool.poolDetails.PWDs)
+    );
+  } else if (
+    currentTime <=
+    BigInt(pool.poolDetails.DistributionStartTime) +
+      BigInt(pool.poolDetails.PWDs) +
+      BigInt(pool.poolDetails.PRDs)
+  ) {
+    poolState = "ProjectsRoundTwoEvaluation";
+    remainingTime = calculateRemainingTime(
+      currentTime,
+      BigInt(pool.poolDetails.DistributionStartTime) +
+        BigInt(pool.poolDetails.PWDs) +
+        BigInt(pool.poolDetails.PRDs)
+    );
+  } else if (!IsSecondDistributionDone(pool.registeredRecipients)) {
+    poolState = "WaitingForFinalDistribution";
+    remainingTime = "";
+    // Assuming no time limit for this state, or set a specific end time if applicable
+  } else {
+    poolState = "Ended";
+    remainingTime = "";
+    // No remaining time as the pool is disabled
+  }
+
+  return { poolState, remainingTime };
+};
+
+function IsSecondDistributionDone(recipients) {
+  for (const recipient of recipients) {
+    const secondDistribution = recipient.distributions.find(
+      (distribution) => distribution.streamID === "0"
+    );
+
+    if (secondDistribution) {
+      return true; // Found a recipient with a second distribution with streamID "0"
+    }
+  }
+
+  return false; // No recipient with a second distribution with streamID "0" found
+}
+
+export const calculateActualCredits = (voteResult) => {
+  // Assuming voteResult is the square root of totalCredits * 1e18
+  // First square the voteResult to get back to totalCredits * 1e18
+  const totalCreditsScaled = Math.pow(voteResult, 2);
+
+  // Then, divide by the scaling factor (1e18) to get the actual credits
+  const actualCredits = totalCreditsScaled / 10 ** 18;
+
+  return actualCredits;
+};
+
+export const calculateQuadraticVotingPercentages = (allocators) => {
+  // Normalize votes from string to number
+  const normalizeVotes = (voteString) => Number(voteString);
+
+  // Create a map to store unique allocators by their IDs
+  let uniqueAllocators = {};
+  allocators.forEach((allocator) => {
+    uniqueAllocators[allocator.allocatorID] = allocator;
+  });
+
+  // Aggregate votes for each recipient across unique allocators
+  let totalVotes = {};
+  Object.values(uniqueAllocators).forEach((allocator) => {
+    allocator.allocations.forEach((allocation) => {
+      const recipientID = allocation.recipientID;
+      const votesAmount = normalizeVotes(allocation.votesAmount);
+
+      if (!totalVotes[recipientID]) {
+        totalVotes[recipientID] = 0;
+      }
+      totalVotes[recipientID] += votesAmount;
+    });
+  });
+
+  // Calculate total votes sum
+  let totalVotesSum = Object.values(totalVotes).reduce(
+    (sum, current) => sum + current,
+    0
+  );
+
+  // Calculate percentage of total votes for each recipient
+  let percentages = {};
+  for (const [recipientID, votes] of Object.entries(totalVotes)) {
+    percentages[recipientID] = votes / totalVotesSum;
+  }
+
+  return percentages;
+};
+
+export const calculateRemainingCreditsForAllocator = (
+  allocators,
+  allocatorID,
+  maxCredits
+) => {
+  // Find the unique allocator entry
+
+  if (!allocators) return;
+  const allocator = allocators.find(
+    (allocator) => allocator.allocatorID === allocatorID
+  );
+
+  if (!allocator) {
+    console.error("Allocator not found");
+    return null;
+  }
+
+  // Sum up the square roots of votesAmount to find total credits used
+  let totalCreditsUsed = allocator.allocations.reduce((total, allocation) => {
+    return total + Math.sqrt(Number(allocation.votesAmount));
+  }, 0);
+
+  // Convert totalCreditsUsed from QV format to normal format by taking the square root
+  let totalUsedCredits = Math.sqrt(totalCreditsUsed);
+
+  // Calculate remaining credits (not in QV format)
+  let remainingCredits = maxCredits - totalUsedCredits;
+
+  // Ensure remaining credits is not negative
+  remainingCredits = Math.max(remainingCredits, 0);
+
+  return remainingCredits;
+};
+
+export const fetchRecipientMetadata = async (recipient) => {
+  const metadataResponse = await axios.get(
+    `https://ipfs.io/ipfs/${recipient.metadata}`
+  );
+  return metadataResponse.data;
+};
+
+export const sortRecipientsByPercentage = (recipients) => {
+  recipients?.sort((a, b) => {
+    const percentageA = a.poolPercentage;
+    const percentageB = b.poolPercentage;
+    return percentageB - percentageA; // Sort in descending order
+  });
+};
+
+export const getTime = async () => {
+  const time = await publicClient.readContract({
+    address: CONTRACT_ADDRESS,
+    abi: CONTRACT_ABI,
+    functionName: "getTime",
+  });
+  return time;
+};
+
+export const alreadyReviewedRecipient = (recipient) => {
+  try {
+    return recipient.reviews.some(
+      (review) => review.reviewedBy === account.toLowerCase()
+    );
+  } catch {
+    return false;
+  }
 };

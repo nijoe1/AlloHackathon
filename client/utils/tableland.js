@@ -357,9 +357,10 @@ export const getProfilesData = async (profileIDs) => {
             (SELECT COUNT(*) FROM ${
               tables.profilePools
             } AS pp WHERE pp.profileID = p.profileID AND pp.isCreator = 'false') AS poolsRegistered,
-            (SELECT COALESCE(SUM(a.distributionAmount), 0) FROM ${
-              tables.poolsDistributions
-            } AS a ) AS fundsDistributed,
+            (SELECT COALESCE(SUM(pd.distributionAmount), 0) FROM ${tables.poolsDistributions} AS pd
+         JOIN ${tables.pools} AS pl ON pd.poolID = pl.poolID
+         JOIN ${tables.profilePools} AS pp ON pl.poolID = pp.poolID
+         WHERE pp.profileID = p.profileID AND pp.isCreator = 'true') AS fundsDistributed,
             (SELECT COALESCE(SUM(d.distributionAmount), 0) FROM ${
               tables.poolsDistributions
             } AS d WHERE d.recipientID = p.profileID) AS fundsReceived

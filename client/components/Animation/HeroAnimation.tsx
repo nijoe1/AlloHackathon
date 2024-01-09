@@ -1,6 +1,5 @@
 import Lottie from "lottie-react";
-import blocks from "./animation.json";
-import ai from "./AI.json";
+import funding from "./funding.json";
 import rocket from "./Rocket.json";
 
 export default function HeroAnimation() {
@@ -16,7 +15,7 @@ export default function HeroAnimation() {
         style={{ height: "190px", width: "190px" }}
         className="flex flex-col items-center justify-center "
       >
-        <Lottie animationData={ai} />
+        <Lottie animationData={funding} />
       </div>
     </div>
   );

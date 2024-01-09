@@ -1,14 +1,5 @@
 import {
   getProfileHatsWearers,
-  allAgentsQuery,
-  allCreatorsQuery,
-  allRoundsQuery,
-  indivAgentQuery,
-  indivCreatorQuery,
-  indivLockQuery,
-  indivRoundQuery,
-  indivSubscriptionQuery,
-  indivUserQuery,
 } from "@/constants/graphQuery";
 import { ApolloClient, InMemoryCache, gql } from "@apollo/client";
 

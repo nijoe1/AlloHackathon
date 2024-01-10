@@ -85,14 +85,14 @@ const Index = () => {
           {organizations.map((orgData, index) => (
             <GridItem
               key={index}
-              bg="white"
+              bg="gray.130"
               boxShadow="lg"
               p={5}
               rounded="lg"
               border="1px"
               borderColor={"gray.300"}
               _hover={{ transform: "scale(1.02)", boxShadow: "2xl" }}
-              className="flex flex-col items-center justify-center"
+              className="flex flex-col items-center justify-center bg-gray-100"
             >
               <Badge
                 colorScheme={
@@ -104,7 +104,7 @@ const Index = () => {
                 }
                 mb={3}
               >
-                {orgData.type}
+                {`You are wearing the ${orgData.type} Hat`}
               </Badge>
 
               <Box textAlign="center">

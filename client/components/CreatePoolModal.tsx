@@ -1,4 +1,4 @@
-import React, { use, useEffect, useState } from "react";
+import React, { use, useEffect, useRef, useState } from "react";
 import {
   VStack,
   FormControl,
@@ -7,6 +7,7 @@ import {
   NumberInput,
   NumberInputField,
   Switch,
+  Text,
   HStack,
   Button,
   Tooltip,
@@ -22,10 +23,12 @@ import { DAI_ABI, DAI_ADDRESS } from "@/constants/DAI";
 import { useRouter } from "next/router";
 import axios from "axios";
 import { fileToBase64 } from "@/utils/utils";
+import { MdOutlineAttachFile } from "react-icons/md";
 
 const CreatePoolModal = (profileID: any) => {
   const router = useRouter();
   const [registrationNow, setRegistrationNow] = useState(false);
+  const [file, setFile] = useState<any>("");
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
@@ -34,7 +37,7 @@ const CreatePoolModal = (profileID: any) => {
   const [poolForm, setPoolForm] = useState({
     poolName: "",
     poolDescription: "",
-    poolImage: null,
+    poolImage: undefined as any,
     RegistrationDurationDays: 0,
     RegistrationDurationHours: 0, // Add hours field
     RegistrationDurationMinutes: 0, // Add minutes field
@@ -76,7 +79,7 @@ const CreatePoolModal = (profileID: any) => {
 
   useEffect(() => {
     console.log(poolForm);
-  }, [poolForm]);
+  }, [poolForm, file]);
 
   const createPool = async (metadata: any) => {
     console.log(metadata);
@@ -89,7 +92,7 @@ const CreatePoolModal = (profileID: any) => {
         functionName: "approve",
         args: [
           CONTRACT_ADDRESS,
-          BigInt(poolForm.startingPoolAmount * 10 ** 18),
+          BigInt((poolForm.startingPoolAmount + 1) * 10 ** 18),
         ],
       });
       console.log(approve);
@@ -114,7 +117,9 @@ const CreatePoolModal = (profileID: any) => {
         args: [
           profileID.profileID,
           {
-            maxVoiceCreditsPerAllocator: BigInt(poolForm.maxVotesPerAllocator),
+            maxVoiceCreditsPerAllocator: BigInt(
+              poolForm.maxVotesPerAllocator + 1
+            ),
             params: {
               roundOnePercentage: poolForm.roundOnePercentage,
               voteThreshold: poolForm.votesThreshold,
@@ -178,7 +183,14 @@ const CreatePoolModal = (profileID: any) => {
     days * 24 * 60 * 60 + hours * 60 * 60 + minutes * 60;
 
   const handleFileChange = (event: any) => {
+    setFile(event.target.files[0]);
     setPoolForm({ ...poolForm, poolImage: event.target.files[0] });
+  };
+
+  const hiddenFileInput = useRef(null);
+  const handleClick = () => {
+    //@ts-ignore
+    hiddenFileInput?.current?.click();
   };
 
   const handleSubmit = async () => {
@@ -193,7 +205,7 @@ const CreatePoolModal = (profileID: any) => {
       return;
     }
 
-    const selectedFile = poolForm.poolImage;
+    const selectedFile = file;
 
     let base64Image = await fileToBase64(selectedFile);
 
@@ -282,8 +294,14 @@ const CreatePoolModal = (profileID: any) => {
 
   return (
     <>
-      <VStack spacing={4} width={300} bg={"gray.300"}>
-        <FormControl isRequired>
+      <VStack spacing={4} width={300} bg={"gray.100"}>
+        <FormControl
+          isRequired
+          border="1px"
+          borderColor="blue.500"
+          p={3}
+          borderRadius="md"
+        >
           <FormLabel>Pool Name</FormLabel>
           <Input
             placeholder="Enter pool name"
@@ -293,7 +311,14 @@ const CreatePoolModal = (profileID: any) => {
             }
           />
         </FormControl>
-        <FormControl isRequired>
+        <FormControl
+          isRequired
+          border="1px"
+          borderColor="blue.500"
+          p={3}
+          borderRadius="md"
+        >
+          {" "}
           <FormLabel>Pool Description</FormLabel>
           <Input
             onChange={(val) =>
@@ -306,38 +331,65 @@ const CreatePoolModal = (profileID: any) => {
             placeholder="Enter pool description"
           />
         </FormControl>
-        {/* <HStack spacing="2">
-          <Button
-            onClick={() => handleClick()}
-            leftIcon={<MdOutlineAttachFile />}
-          >
-            Upload Image
-          </Button>
-          <Text fontSize="sm">{file ? file.name : "No file selected"}</Text>
-          <input
-            type="file"
-            ref={hiddenFileInput}
-            onChange={handleFileChange}
-            style={{ display: "none" }}
-            accept="image/*"
-          />
-        </HStack> */}
-        <FormControl isRequired>
+        <FormControl
+          isRequired
+          border="1px"
+          borderColor="blue.500"
+          p={3}
+          borderRadius="md"
+        >
+          {" "}
           <FormLabel>Pool Image</FormLabel>
-          <Input type="file" onChange={handleFileChange} accept="image/*" />
+          <HStack spacing="2">
+            <Button
+              onClick={() => handleClick()}
+              leftIcon={<MdOutlineAttachFile />}
+            >
+              Upload Image
+            </Button>
+            <div>
+              <Text fontSize="sm">
+                {file?.name ? file?.name : "No file selected"}
+              </Text>
+            </div>
+
+            <input
+              type="file"
+              ref={hiddenFileInput}
+              onChange={handleFileChange}
+              style={{ display: "none" }}
+              accept="image/*"
+            />
+          </HStack>
         </FormControl>
-        <HStack align="center">
-          <Switch
-            id="registration-now"
-            size="md"
-            onChange={() => setRegistrationNow(!registrationNow)}
-          />
-          <FormLabel htmlFor="registration-now" mb="0">
-            Registration Starts Now
-          </FormLabel>
-        </HStack>
+        <FormControl
+          isRequired
+          border="1px"
+          borderColor="blue.500"
+          p={3}
+          borderRadius="md"
+        >
+          {" "}
+          <HStack align="center">
+            <Switch
+              id="registration-now"
+              size="md"
+              onChange={() => setRegistrationNow(!registrationNow)}
+            />
+            <FormLabel htmlFor="registration-now" mb="0">
+              Registration Starts Now?
+            </FormLabel>
+          </HStack>
+        </FormControl>
         {!registrationNow && (
-          <FormControl>
+          <FormControl
+            isRequired
+            border="1px"
+            borderColor="blue.500"
+            p={3}
+            borderRadius="md"
+          >
+            {" "}
             <FormLabel>Registration Start Date</FormLabel>
             <DatePicker
               selected={startDate}
@@ -346,8 +398,40 @@ const CreatePoolModal = (profileID: any) => {
             />
           </FormControl>
         )}
-
-        <FormControl isRequired>
+        <FormControl
+          isRequired
+          border="1px"
+          borderColor="blue.500"
+          p={3}
+          borderRadius="md"
+        >
+          {" "}
+          <Tooltip
+            placement="top"
+            label="Acceptance Threshold: The minimum number of votes required for a project to be accepted into the pool"
+          >
+            <FormLabel>Acceptance Threshold</FormLabel>
+          </Tooltip>
+          <NumberInput
+            min={0}
+            onChange={(val: any) =>
+              setPoolForm({
+                ...poolForm,
+                votesThreshold: val,
+              })
+            }
+          >
+            <NumberInputField />
+          </NumberInput>
+        </FormControl>
+        <FormControl
+          isRequired
+          border="1px"
+          borderColor="blue.500"
+          p={3}
+          borderRadius="md"
+        >
+          {" "}
           <Tooltip
             placement="top"
             label="Registration Duration defines the time that profiles can register into the pool"
@@ -390,14 +474,20 @@ const CreatePoolModal = (profileID: any) => {
             </NumberInput>
           </HStack>
         </FormControl>
-        <FormControl isRequired>
+        <FormControl
+          isRequired
+          border="1px"
+          borderColor="blue.500"
+          p={3}
+          borderRadius="md"
+        >
+          {" "}
           <Tooltip
             placement="top"
             label="Allocation Starts after the end of the registration period"
           >
             <FormLabel>Allocation Duration (days, hours, minutes)</FormLabel>
           </Tooltip>
-
           <HStack>
             <NumberInput
               min={0}
@@ -434,7 +524,14 @@ const CreatePoolModal = (profileID: any) => {
             </NumberInput>
           </HStack>
         </FormControl>
-        <FormControl isRequired>
+        <FormControl
+          isRequired
+          border="1px"
+          borderColor="blue.500"
+          p={3}
+          borderRadius="md"
+        >
+          {" "}
           <Tooltip
             placement="top"
             label="Projects Work Period: Starts after Round One Distribution, following proposal acceptance, based on Sablier Stream allocations."
@@ -443,7 +540,6 @@ const CreatePoolModal = (profileID: any) => {
               Projects Working Duration (days, hours, minutes)
             </FormLabel>
           </Tooltip>
-
           <HStack>
             <NumberInput
               min={0}
@@ -481,7 +577,14 @@ const CreatePoolModal = (profileID: any) => {
           </HStack>
         </FormControl>
 
-        <FormControl isRequired>
+        <FormControl
+          isRequired
+          border="1px"
+          borderColor="blue.500"
+          p={3}
+          borderRadius="md"
+        >
+          {" "}
           <Tooltip
             placement="top"
             label="Projects Reviewing Period: Starts after Project Working Period is Over, Organization members can find out if projects completed their objectives otherwise disqualify them from the second Distribution."
@@ -490,7 +593,6 @@ const CreatePoolModal = (profileID: any) => {
               Projects Reviewing Duration (days, hours, minutes)
             </FormLabel>
           </Tooltip>
-
           <HStack>
             <NumberInput
               min={0}
@@ -527,14 +629,20 @@ const CreatePoolModal = (profileID: any) => {
             </NumberInput>
           </HStack>
         </FormControl>
-        <FormControl isRequired>
+        <FormControl
+          isRequired
+          border="1px"
+          borderColor="blue.500"
+          p={3}
+          borderRadius="md"
+        >
+          {" "}
           <Tooltip
             placement="top"
             label="The percentage to distribute in the first round after allocation period is over. Distribution happens using Sablier Streaming Protocol"
           >
             <FormLabel>Round One Distribution Percentage</FormLabel>
           </Tooltip>
-
           <NumberInput
             max={100}
             min={0}
@@ -548,7 +656,14 @@ const CreatePoolModal = (profileID: any) => {
             <NumberInputField />
           </NumberInput>
         </FormControl>
-        <FormControl isRequired>
+        <FormControl
+          isRequired
+          border="1px"
+          borderColor="blue.500"
+          p={3}
+          borderRadius="md"
+        >
+          {" "}
           <FormLabel>Maximum Votes Per Allocator</FormLabel>
           <NumberInput
             min={0}
@@ -562,11 +677,17 @@ const CreatePoolModal = (profileID: any) => {
             <NumberInputField />
           </NumberInput>
         </FormControl>
-        <FormControl isRequired>
+        <FormControl
+          isRequired
+          border="1px"
+          borderColor="blue.500"
+          p={3}
+          borderRadius="md"
+        >
+          {" "}
           <Tooltip placement="top" label="Default Token DAI Stablecoin">
             <FormLabel>Token Address</FormLabel>
           </Tooltip>
-
           <Input
             placeholder="Enter token address"
             value={poolForm.tokenAddress}
@@ -575,7 +696,14 @@ const CreatePoolModal = (profileID: any) => {
             }
           />
         </FormControl>
-        <FormControl isRequired>
+        <FormControl
+          isRequired
+          border="1px"
+          borderColor="blue.500"
+          p={3}
+          borderRadius="md"
+        >
+          {" "}
           <FormLabel>Starting Pool Amount</FormLabel>
           <NumberInput
             min={0}

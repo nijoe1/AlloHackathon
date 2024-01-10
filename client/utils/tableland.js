@@ -70,7 +70,8 @@ export const getAllPoolsCreatedByProfile = async (profileID) => {
                                                 WHERE a.poolID = p.poolID),
                         'poolMetadata', pp_pool.metadata,
                         'creatorName', creator_profile.name,
-                        'creatorMetadata', creator_profile.metadata
+                        'creatorMetadata', creator_profile.metadata,
+                        'anchor', creator_profile.profileAddress
                     ) AS poolDetails,
                     (
                         SELECT json_group_array(
@@ -160,6 +161,7 @@ export const getAllPoolsCreatedByProfile = async (profileID) => {
                         WHERE r.poolID = p.poolID
                         GROUP BY r.reviewedBy
                     ) AS reviewersInfo
+                    
                     FROM 
                         ${tables.profilePools} AS pp_pool
                     JOIN 
@@ -199,6 +201,7 @@ export const getAllPoolsRegisteredByProfile = async (profileID) => {
         'PRDs', p.PRDs,
         'poolMetadata', profile.metadata,
         'creatorName', profile.name,
+        'anchor', profile.profileAddress,
         'totalVotesAllocated', (SELECT COALESCE(SUM(a.votesAmount), 0)
                                 FROM ${tables.poolsAllocations} AS a
                                 WHERE a.poolID = p.poolID),
@@ -216,32 +219,6 @@ export const getAllPoolsRegisteredByProfile = async (profileID) => {
                                 FROM ${tables.poolsAllocations} AS a
                                 WHERE a.recipientID = pp_reg.profileID AND a.poolID = p.poolID)
     ) AS poolDetails,
-    (
-        SELECT json_group_array(
-            json_object(
-                'reviewRound', r.reviewRound,
-                'reviewedBy', r.reviewedBy,
-                'reviewedAt', r.reviewedAt,
-                'status', r.status,
-                'recipientID', r.recipientID,
-                'recipientAddress', r.recipientAddress
-            )
-        )
-        FROM ${tables.poolsReviews} AS r
-        WHERE r.recipientID = pp_reg.profileID AND r.poolID = p.poolID
-    ) AS reviews,
-    (
-        SELECT json_group_array(
-            json_object(
-                'allocationFrom', a.allocationFrom,
-                'votesAmount', a.votesAmount,
-                'recipientID', a.recipientID,
-                'recipientAddress', a.recipientAddress
-            )
-        )
-        FROM ${tables.poolsAllocations} AS a
-        WHERE a.recipientID = pp_reg.profileID AND a.poolID = p.poolID
-    ) AS allocations,
     (
         SELECT json_group_array(
             json_object(
@@ -280,7 +257,8 @@ export const getProfileDetails = async (profileID) => {
   const query = `
     SELECT 
       profile.metadata,
-      profile.name
+      profile.name,
+      profile.adminHat
     FROM 
       ${tables.profiles} AS profile 
     WHERE 
@@ -339,7 +317,6 @@ export const getAllActivePools = async (time) => {
 };
 
 export const getProfilesData = async (profileIDs) => {
-  let count = 0;
   let whereClause = profileIDs
     .map((profileID, index) => {
       return `${index === 0 ? "" : " OR "}p.profileID = '${profileID}'`;
@@ -351,13 +328,18 @@ export const getProfilesData = async (profileIDs) => {
             p.profileID,
             p.name,
             p.metadata AS ProfileMetadata,
+            p.adminHat,
+            p.metadata,
+            p.profileAddress,
             (SELECT COUNT(*) FROM ${
               tables.profilePools
             } AS pp WHERE pp.profileID = p.profileID AND pp.isCreator = 'true') AS poolsCreated,
             (SELECT COUNT(*) FROM ${
               tables.profilePools
             } AS pp WHERE pp.profileID = p.profileID AND pp.isCreator = 'false') AS poolsRegistered,
-            (SELECT COALESCE(SUM(pd.distributionAmount), 0) FROM ${tables.poolsDistributions} AS pd
+            (SELECT COALESCE(SUM(pd.distributionAmount), 0) FROM ${
+              tables.poolsDistributions
+            } AS pd
          JOIN ${tables.pools} AS pl ON pd.poolID = pl.poolID
          JOIN ${tables.profilePools} AS pp ON pl.poolID = pp.poolID
          WHERE pp.profileID = p.profileID AND pp.isCreator = 'true') AS fundsDistributed,
@@ -403,7 +385,8 @@ export const getPool = async (poolID) => {
                               WHERE a.poolID = p.poolID),
       'poolMetadata', pp_pool.metadata,
       'creatorName', creator_profile.name,
-      'creatorMetadata', creator_profile.metadata
+      'creatorMetadata', creator_profile.metadata,
+      'adminHat', creator_profile.adminHat
   ) AS poolDetails,
   (
       SELECT json_group_array(

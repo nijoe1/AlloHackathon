@@ -15,6 +15,7 @@ import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/constants/HackRegistry";
 const publicClient = getPublicClient();
 
 export const formatCurrency = (value) => {
+  if (!value) return "$0";
   value = BigInt(value) / BigInt(10 ** 18);
 
   let formattedValue;
@@ -99,6 +100,38 @@ export const getUserOrganizations = async (address) => {
   }
 
   return partOfProfiles;
+};
+
+export const getUserProfileRole = async (address, adminHat) => {
+  let data = encodePacked(["uint256"], [adminHat]);
+  console.log(data);
+
+  let resp = await getProfileHats(data);
+  const searchAdmin = resp?.hat?.wearers[0]?.id == address?.toLowerCase();
+
+  if (searchAdmin === true) {
+    return "ADMIN";
+  }
+  console.log(resp?.hat);
+  if (resp?.hat?.subHats[0]?.wearers) {
+    for (const wearer of resp?.hat?.subHats[0]?.wearers) {
+      if (wearer.id == address?.toLowerCase()) {
+        return "MANAGER";
+      }
+    }
+  }
+  if (resp?.hat?.subHats[0]?.subHats[0]?.wearers) {
+    console.log("checking");
+
+    for (const wearer of resp?.hat?.subHats[0]?.subHats[0]?.wearers) {
+      console.log("checking");
+
+      if (wearer?.id == address?.toLowerCase()) {
+        return "REVIEWER";
+      }
+    }
+  }
+  return "NONE";
 };
 
 export const fileToBase64 = async (file) => {
@@ -189,13 +222,13 @@ export const processPoolStateAndRemainingTime = (pool, currentTime) => {
   let poolState;
   let remainingTime = 0;
 
-  if (currentTime <= BigInt(pool.poolDetails.RETs)) {
+  if (0 <= BigInt(pool.poolDetails.RETs) - currentTime) {
     poolState = "RegistrationPeriod";
     remainingTime = calculateRemainingTime(
       currentTime,
       BigInt(pool.poolDetails.RETs)
     );
-  } else if (currentTime <= BigInt(pool.poolDetails.AETs)) {
+  } else if (0 < BigInt(pool.poolDetails.AETs) - currentTime) {
     poolState = "AllocationPeriod";
     remainingTime = calculateRemainingTime(
       currentTime,
@@ -205,9 +238,10 @@ export const processPoolStateAndRemainingTime = (pool, currentTime) => {
     poolState = "WaitingForStreamDistribution";
     // Assuming no time limit for this state, or set a specific end time if applicable
   } else if (
-    currentTime <
+    0 <
     BigInt(pool.poolDetails.DistributionStartTime) +
-      BigInt(pool.poolDetails.PWDs)
+      BigInt(pool.poolDetails.PWDs) -
+      currentTime
   ) {
     poolState = "WorkingPeriod";
     remainingTime = calculateRemainingTime(
@@ -216,10 +250,11 @@ export const processPoolStateAndRemainingTime = (pool, currentTime) => {
         BigInt(pool.poolDetails.PWDs)
     );
   } else if (
-    currentTime <=
+    0 <=
     BigInt(pool.poolDetails.DistributionStartTime) +
       BigInt(pool.poolDetails.PWDs) +
-      BigInt(pool.poolDetails.PRDs)
+      BigInt(pool.poolDetails.PRDs) -
+      currentTime
   ) {
     poolState = "ProjectsRoundTwoEvaluation";
     remainingTime = calculateRemainingTime(
@@ -242,6 +277,7 @@ export const processPoolStateAndRemainingTime = (pool, currentTime) => {
 };
 
 function IsSecondDistributionDone(recipients) {
+  if (!recipients.distributions) return false;
   for (const recipient of recipients) {
     const secondDistribution = recipient.distributions.find(
       (distribution) => distribution.streamID === "0"
@@ -312,23 +348,23 @@ export const calculateRemainingCreditsForAllocator = (
 ) => {
   // Find the unique allocator entry
 
-  if (!allocators) return;
+  if (!allocators) return maxCredits;
   const allocator = allocators.find(
     (allocator) => allocator.allocatorID === allocatorID
   );
 
   if (!allocator) {
     console.error("Allocator not found");
-    return null;
+    return maxCredits;
   }
 
   // Sum up the square roots of votesAmount to find total credits used
   let totalCreditsUsed = allocator.allocations.reduce((total, allocation) => {
-    return total + Math.sqrt(Number(allocation.votesAmount));
+    return total + Math.pow(Number(allocation.votesAmount), 2);
   }, 0);
 
   // Convert totalCreditsUsed from QV format to normal format by taking the square root
-  let totalUsedCredits = Math.sqrt(totalCreditsUsed);
+  let totalUsedCredits = totalCreditsUsed / 10 ** 18;
 
   // Calculate remaining credits (not in QV format)
   let remainingCredits = maxCredits - totalUsedCredits;
@@ -336,7 +372,11 @@ export const calculateRemainingCreditsForAllocator = (
   // Ensure remaining credits is not negative
   remainingCredits = Math.max(remainingCredits, 0);
 
-  return remainingCredits;
+  remainingCredits < 1
+    ? (remainingCredits = 0)
+    : (remainingCredits = remainingCredits);
+
+  return (remainingCredits - 1).toFixed(0);
 };
 
 export const fetchRecipientMetadata = async (recipient) => {
@@ -371,4 +411,21 @@ export const alreadyReviewedRecipient = (recipient) => {
   } catch {
     return false;
   }
+};
+
+export const filterStreamsByRecipient = (streams, recipient) => {
+  const filteredStreams = streams.filter(
+    (stream) => stream.recipient === recipient
+  );
+  const streamInfoMap = new Map();
+  filteredStreams.forEach((stream) => {
+    streamInfoMap.set(
+      stream.id.replace(
+        "0x483bdd560de53dc20f72dc66acdb622c5075de34-421614-",
+        ""
+      ),
+      stream
+    );
+  });
+  return streamInfoMap;
 };

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Avatar, Wrap, WrapItem } from "@chakra-ui/react";
 import Navbar from "@/components/navbar";
 import HeroAnimation from "@/components/Animation/HeroAnimation";
-
 export default function Home() {
   // useState and useEffect to fetch and set dynamic data
 
@@ -63,7 +62,9 @@ export default function Home() {
                   alt="Sablier"
                   className="h-16 rounded-xl"
                 />
-                <p className="text-bolder text-gray-100 text-2xl mt-2">Sablier</p>
+                <p className="text-bolder text-gray-100 text-2xl mt-2">
+                  Sablier
+                </p>
               </div>
               <div>
                 <img

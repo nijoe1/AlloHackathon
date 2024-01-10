@@ -33,7 +33,7 @@ const ConfigureOrganizationModal = ({ profileID }) => {
         width: "4px",
       },
       "::-webkit-scrollbar-thumb": {
-        background: "gray.300",
+        background: "gray.100",
         borderRadius: "24px",
       },
     },
@@ -42,7 +42,7 @@ const ConfigureOrganizationModal = ({ profileID }) => {
   // ... other states and hooks
 
   return (
-    <>
+    <div className="flex flex-col items-center mt-5 bg-gray-100">
       <Button colorScheme={"blue"} onClick={onOpen}>
         Configure Organization
       </Button>
@@ -51,10 +51,10 @@ const ConfigureOrganizationModal = ({ profileID }) => {
         onClose={onClose}
         isCentered
         size="4xl"
-        bg={"gray.300"}
+        bg={"gray.100"}
       >
         <ModalOverlay />
-        <ModalContent>
+        <ModalContent bg={"gray.100"}>
           <ModalHeader>Configure Organization</ModalHeader>
           <ModalCloseButton />
           <StyledModalBody>
@@ -81,7 +81,7 @@ const ConfigureOrganizationModal = ({ profileID }) => {
           </StyledModalBody>
         </ModalContent>
       </Modal>
-    </>
+    </div>
   );
 };
 

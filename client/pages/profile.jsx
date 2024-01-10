@@ -27,13 +27,20 @@ import ConfigureOrganizationModal from "@/components/ConfigureOrganizationModal"
 
 import Loading from "@/components/Animation/Loading";
 
+import PoolsTable from "@/components/RegisteredPoolsTable";
+
 import {
   getAllPoolsCreatedByProfile,
   getAllPoolsRegisteredByProfile,
-  getProfileDetails,
+  getProfilesData,
 } from "@/utils/tableland";
 
-import { calculateRemainingTime, formatCurrency } from "@/utils/utils";
+import {
+  calculateRemainingTime,
+  formatCurrency,
+  getUserProfileRole,
+  processPoolStateAndRemainingTime,
+} from "@/utils/utils";
 
 import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/constants/HackRegistry";
 import { DAI_ABI, DAI_ADDRESS } from "@/constants/DAI";
@@ -43,14 +50,19 @@ import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 
 const OrganizationProfile = () => {
   const router = useRouter();
-  const { orgID, Access } = router.query;
+  const { orgID } = router.query;
   const [createdPools, setCreatedPools] = useState([]);
+  const [balance, setBalance] = useState(0);
+  const [anchor, setAnchor] = useState("");
   const [registeredPools, setRegisteredPools] = useState([]);
+  const [fundsInfo, setFundsInfo] = useState({}); // { fundsRecieved, fundsDistributed }
   const [detailsFetched, setDetailsFetched] = useState(false);
   const [creatorMetadata, setCreatorMetadata] = useState([]);
+  const [Access, setAccess] = useState("USER");
   const { address: account } = useAccount();
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
+  const [currentTime, setCurrentTime] = useState(0); // Current time in seconds since epoch
 
   const getTime = async () => {
     const time = await publicClient.readContract({
@@ -61,40 +73,16 @@ const OrganizationProfile = () => {
     return time;
   };
 
-  const processPoolsWithMetadata = async (pools) => {
+  const processPoolsWithMetadata = async (pools, time) => {
     try {
-      let id = 0;
-      let creatorMetadata = {};
       const processedPoolsPromises = pools.map(async (pool) => {
         let CID = pool.poolDetails.poolMetadata;
         const metadataResponse = await axios.get(`https://ipfs.io/ipfs/${CID}`);
         const metadata = metadataResponse.data;
-        console.log(metadata);
-        const time = await getTime();
-        const poolState =
-          time < pool.poolDetails.RETs
-            ? "RegistrationPeriod"
-            : time < pool.poolDetails.AETs
-            ? "AllocationPeriod"
-            : "WorkingPeriod";
-        let remainingTime;
-        if (poolState === "WorkingPeriod") {
-          remainingTime = calculateRemainingTime(
-            time,
-            BigInt(pool.poolDetails.DistributionStartTime) +
-              BigInt(pool.poolDetails.PWDs)
-          );
-        } else if (poolState === "AllocationPeriod") {
-          remainingTime = calculateRemainingTime(
-            time,
-            BigInt(pool.poolDetails.AETs)
-          );
-        } else {
-          remainingTime = calculateRemainingTime(
-            time,
-            BigInt(pool.poolDetails.RETs)
-          );
-        }
+
+        const state = processPoolStateAndRemainingTime(pool, time);
+        const poolState = state.poolState;
+        let remainingTime = state.remainingTime;
 
         let poolAmount1 = await publicClient.readContract({
           address: DAI_ADDRESS,
@@ -117,6 +105,7 @@ const OrganizationProfile = () => {
 
       // Wait for all promises to resolve
       const processedPools = await Promise.all(processedPoolsPromises);
+
       return processedPools;
     } catch (error) {
       console.error("Error processing pools:", error);
@@ -126,34 +115,54 @@ const OrganizationProfile = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const profile = await getProfileDetails(orgID);
+      // const profile = await getProfileDetails(orgID);
+      const profile = await getProfilesData([orgID]);
+      const role = await getUserProfileRole(account, profile[0].adminHat);
+      const regPools = await getAllPoolsRegisteredByProfile(orgID);
+      setRegisteredPools(regPools);
+      setAccess(role);
+      setFundsInfo({
+        fundsReceived: profile[0].fundsReceived,
+        fundsDistributed: profile[0].fundsDistributed,
+      });
+      setAnchor(profile[0].profileAddress);
+
+      const getBalance = await publicClient.readContract({
+        address: DAI_ADDRESS,
+        abi: DAI_ABI,
+        functionName: "balanceOf",
+        args: [profile[0].profileAddress],
+      });
+
+      setBalance(getBalance);
+      const time = await getTime();
+      setCurrentTime(time);
+
       const pools = await getAllPoolsCreatedByProfile(orgID);
       let creatorMetadata = await axios.get(
         `https://ipfs.io/ipfs/${profile[0]?.metadata}`
       );
-      console.log(creatorMetadata.data);
       setCreatorMetadata(creatorMetadata.data);
-
-      const processedPools = await processPoolsWithMetadata(pools);
-      console.log(creatorMetadata.data);
+      const processedPools = await processPoolsWithMetadata(pools, time);
       setCreatedPools(processedPools);
+      setDetailsFetched(true);
     };
 
     if (orgID && !detailsFetched) fetchData();
   }, [orgID, detailsFetched]);
 
   return (
-    <div className="bg-gradient-to-r from-gray via-gray to-gray-800 rounded-md">
-      {!detailsFetched ? (
+    <div className="bg-gradient-to-r from-gray via-gray to-gray-800 rounded-md my-[7%]">
+      {detailsFetched ? (
         <Box
-          className="bg-gradient-to-r from-gray via-gray to-gray-800 rounded-md"
+          className="gray-130"
           w="full"
         >
           <Flex
-            className="bg-gradient-to-r from-gray via-gray to-gray-800 rounded-md"
+            // className="bg-gradient-to-r from-gray via-gray to-gray-800 rounded-md"
             direction="column"
             align="center"
-            bg="white"
+            bg="gray.200"
             p={6}
             mx="35%"
             mt="3.7%"
@@ -163,6 +172,19 @@ const OrganizationProfile = () => {
             borderColor="gray.300"
             _hover={{ transform: "scale(1.02)", boxShadow: "2xl" }}
           >
+            {" "}
+            <Badge
+              colorScheme={
+                Access == "ADMIN"
+                  ? "red"
+                  : Access === "MANAGER"
+                  ? "purple"
+                  : "blue"
+              }
+              mb={5}
+            >
+              {`You are wearing the ${Access} Hat`}
+            </Badge>
             <AspectRatio ratio={1} w="150px" mb={4}>
               <Image
                 src={
@@ -174,30 +196,34 @@ const OrganizationProfile = () => {
                 borderRadius="full"
               />
             </AspectRatio>
-
             <Text fontSize="3xl" fontWeight="bold" color="gray.700">
               {creatorMetadata.name
                 ? creatorMetadata.name
                 : "Loading Pool Name..."}
             </Text>
-
             <Text fontSize="md" color="gray.700">
               {creatorMetadata.description
                 ? creatorMetadata.description
                 : "Loading Description..."}
             </Text>
-
-            <Stack direction="row" spacing={4} mt={8}>
-              <Badge colorScheme="green">Total Distributed: $500K</Badge>
-              <Badge colorScheme="blue">Total Received: $200K</Badge>
+            <Stack
+              direction="col"
+              className="flex flex-col items-center"
+              spacing={4}
+              mt={8}
+            >
+              <Badge colorScheme="green">{`Total Distributed: ${formatCurrency(
+                fundsInfo.fundsDistributed
+              )}`}</Badge>
+              <Badge colorScheme="blue">{`Total Received: ${formatCurrency(
+                fundsInfo.fundsReceived
+              )}`}</Badge>
             </Stack>
-
-            {true && (
-              <div className="flex flex-col items-center mt-5">
+            {Access == "ADMIN" && (
+              <div>
                 <ConfigureOrganizationModal profileID={orgID} />
               </div>
             )}
-
             {/* Social media links (if applicable) */}
             <Stack direction="row" spacing={4} mt={4}>
               {creatorMetadata.websiteLink && (
@@ -332,7 +358,7 @@ const OrganizationProfile = () => {
                         onClick={() =>
                           router.push({
                             pathname: `/pool`,
-                            query: { poolID: pool.poolID, Access: Access },
+                            query: { poolID: pool.poolID },
                           })
                         }
                       >
@@ -342,7 +368,16 @@ const OrganizationProfile = () => {
                   ))}
                 </Grid>
               </TabPanel>
-              <TabPanel>{/* Content for Registered Pools */}</TabPanel>
+              <TabPanel>
+                <PoolsTable
+                  pools={registeredPools}
+                  profileID={orgID}
+                  balance={balance}
+                  anchorAddress={anchor}
+                  current={currentTime}
+                  Access={Access}
+                />
+              </TabPanel>
             </TabPanels>
           </Tabs>
         </Box>

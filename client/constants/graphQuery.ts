@@ -39,13 +39,13 @@ export const getProfileHatsWearers = gql`
 export const getStreamsForRecipient = gql`
   query ($id: String) {
     streams(recipient: $id) {
+      recipient
       id
       asset {
         id
       }
       sender
       duration
-      recipient
       depositAmount
       intactAmount
       endTime

@@ -27,6 +27,7 @@ import {
   Checkbox,
   Input,
   Switch,
+  Tooltip,
 } from "@chakra-ui/react";
 import { FaExternalLinkAlt } from "react-icons/fa";
 
@@ -36,7 +37,7 @@ import Loading from "@/components/Animation/Loading";
 
 import RegistrationModal from "@/components/RegistrationModal";
 
-import { getPool } from "@/utils/tableland";
+import { getAllPoolsRegisteredByProfile, getPool } from "@/utils/tableland";
 
 import {
   calculateActualCredits,
@@ -48,6 +49,7 @@ import {
   sortRecipientsByPercentage,
   getTime,
   alreadyReviewedRecipient,
+  getUserProfileRole,
 } from "@/utils/utils";
 
 import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/constants/HackRegistry";
@@ -64,9 +66,10 @@ import { AbiCoder } from "ethers";
 
 const Pool = () => {
   const router = useRouter();
-  const { poolID, Access } = router.query;
+  const { poolID } = router.query;
   const [pool, setPool] = useState([]);
   const [recipients, setRecipients] = useState([]);
+  const [Access, setAccess] = useState("");
   const [detailsFetched, setDetailsFetched] = useState(false);
   const { address: account } = useAccount();
   const publicClient = usePublicClient();
@@ -142,7 +145,7 @@ const Pool = () => {
         address: pool.poolDetails.strategy,
         abi: STRATEGY_ABI,
         functionName: "reviewRecipients",
-        args: [recipientIDs, votes],
+        args: [recipientIDs, roundOne ? votes : roundTwoCancelations],
       });
       console.log(data);
       if (!walletClient) {
@@ -206,7 +209,7 @@ const Pool = () => {
   const Distribute = async () => {
     let addressArray = [];
     recipients.map((recipient, index) => {
-      if (recipient.reviewStatusRoundOne === "Accepted")
+      if (recipient.reviewStatusRoundOne == "Accepted")
         addressArray.push(recipient.recipientAddress);
     });
 
@@ -240,37 +243,38 @@ const Pool = () => {
     const processedPools = [];
 
     try {
-      for (const pool of pools) {
-        let CID = pool.poolDetails.poolMetadata;
-        console.log(CID);
-        const metadataResponse = await axios.get(`https://ipfs.io/ipfs/${CID}`);
-        const metadata = metadataResponse.data;
+      let pool = pools[0];
+      let CID = pool.poolDetails.poolMetadata;
+      console.log(CID);
+      const metadataResponse = await axios.get(`https://ipfs.io/ipfs/${CID}`);
+      const metadata = metadataResponse.data;
+      if (metadata.metadata) {
         const metadataResponse2 = await axios.get(`${metadata.metadata}`);
         metadata.image = metadataResponse2.data.image;
-
-        const time = await getTime();
-        let poolState;
-        let remainingTime;
-        let res = processPoolStateAndRemainingTime(pool, time);
-        poolState = res.poolState;
-        remainingTime = res.remainingTime;
-        let poolAmount1 = await publicClient.readContract({
-          address: DAI_ADDRESS,
-          abi: DAI_ABI,
-          functionName: "balanceOf",
-          args: [pool.poolDetails.strategy],
-        });
-
-        let poolAmount = formatCurrency(poolAmount1.toString());
-
-        processedPools.push({
-          ...pool,
-          metadata,
-          poolState,
-          poolAmount: poolAmount.toString(),
-          remainingTime,
-        });
       }
+
+      const time = await getTime();
+      let poolState;
+      let remainingTime;
+      let res = processPoolStateAndRemainingTime(pool, time);
+      poolState = res.poolState;
+      remainingTime = res.remainingTime;
+      let poolAmount1 = await publicClient.readContract({
+        address: DAI_ADDRESS,
+        abi: DAI_ABI,
+        functionName: "balanceOf",
+        args: [pool.poolDetails.strategy],
+      });
+
+      let poolAmount = formatCurrency(poolAmount1.toString());
+
+      processedPools.push({
+        ...pool,
+        metadata,
+        poolState,
+        poolAmount: poolAmount.toString(),
+        remainingTime,
+      });
     } catch (error) {
       console.error("Error processing pools:", error);
       return []; // Return an empty array or handle the error as needed
@@ -283,11 +287,15 @@ const Pool = () => {
     const fetchData = async () => {
       const pooll = await getPool(poolID);
       const processedPools = await processPoolsWithMetadata([pooll[0]]);
+
+      const role = await getUserProfileRole(
+        account,
+        processedPools[0]?.poolDetails.adminHat
+      );
+      setAccess(role);
       console.log(processedPools);
       setPool(processedPools[0]);
       let registrants = processedPools[0]?.registeredRecipients;
-      let totalVotesAllocated =
-        processedPools[0]?.poolDetails.totalVotesAllocated;
 
       if (processedPools[0]?.allocatorsInfo && registrants) {
         let percentages = calculateQuadraticVotingPercentages(
@@ -309,7 +317,7 @@ const Pool = () => {
   return (
     <div className="bg-gradient-to-r from-gray via-gray to-gray-800">
       {detailsFetched && pool ? (
-        <div>
+        <div className="my-[10%]">
           <Box w="full">
             <Flex
               direction="column"
@@ -322,6 +330,18 @@ const Pool = () => {
               borderRadius="lg"
               boxShadow="md"
             >
+              <Badge
+                colorScheme={
+                  Access == "ADMIN"
+                    ? "red"
+                    : Access === "MANAGER"
+                    ? "purple"
+                    : "blue"
+                }
+                mb={5}
+              >
+                {`You are wearing the ${Access} Hat`}
+              </Badge>
               <AspectRatio ratio={1} w="150px" mb={4}>
                 <Image
                   src={
@@ -369,51 +389,103 @@ const Pool = () => {
             <Box className="flex flex-col items-center " mx="30%" my={3}>
               {(Access == "ADMIN" ||
                 Access == "MANAGER" ||
-                Access == "REVIEWER") && (
-                <Box mx="10%" my={3} className="flex flex-col items-center">
-                  <Text fontSize="l" fontWeight="bold">
-                    {pool.poolState == "RegistrationPeriod"
-                      ? "Review Projects"
-                      : pool.poolState == "AllocationPeriod"
-                      ? "Allocate Votes"
-                      : "Working Period"}
-                  </Text>
-                  <div className="flex flex-wrap items-center">
-                    <Switch
-                      colorScheme="blue"
-                      defaultChecked={toggleReview}
-                      onChange={(e) => {
-                        setToggleReview(!toggleReview);
-                        // Update your review object here as needed
-                      }}
-                    />
-                  </div>
-                </Box>
-              )}
+                Access == "REVIEWER") &&
+                (pool.poolState == "RegistrationPeriod" ||
+                  pool.poolState == "AllocationPeriod" ||
+                  pool.poolState == "ProjectsRoundTwoEvaluation") && (
+                  <Box mx="10%" my={3} className="flex flex-col items-center">
+                    <Text fontSize="l" fontWeight="bold" color={"gray.100"}>
+                      {pool.poolState == "RegistrationPeriod"
+                        ? "Review Projects"
+                        : pool.poolState == "AllocationPeriod"
+                        ? `Allocate VotesRemaining: ${calculateRemainingCreditsForAllocator(
+                            pool.allocatorsInfo,
+                            account?.toLowerCase(),
+                            pool.poolDetails?.votesPerAllocator
+                          )}`
+                        : pool.poolState == "ProjectsRoundTwoEvaluation"
+                        ? "Evaluate Projects"
+                        : ""}
+                    </Text>
+                    <div className="flex flex-wrap items-center">
+                      <Switch
+                        colorScheme="blue"
+                        defaultChecked={toggleReview}
+                        onChange={(e) => {
+                          setToggleReview(!toggleReview);
+                          // Update your review object here as needed
+                        }}
+                      />
+                    </div>
+                  </Box>
+                )}
               <Box
                 mx="10%"
                 my={3}
                 className="flex flex-col items-center bg-gray-100 rounded-xl"
               >
-                <Table variant="simple" colorScheme="black">
-                  <Thead>
-                    <Tr>
-                      <Th>Project</Th>
-                      <Th>Status</Th>
-                      {pool.poolState != "RegistrationPeriod" && (
-                        <Th isNumeric>Allocations %</Th>
-                      )}
-                      {(Access == "MANAGER" ||
-                        Access == "ADMIN" ||
-                        Access == "REVIEWER") &&
-                        (pool.poolState == "RegistrationPeriod" ||
-                          pool.poolState == "AllocationPeriod") &&
-                        toggleReview && <Th>Accept?</Th>}
+                <Table colorScheme="black" className="rounded-xl" size="md">
+                  <Thead rounded={"xl"}>
+                    <Tr rounded={"xl"}>
+                      <Th
+                        isNumeric
+                        textAlign="center"
+                        align="center"
+                        rounded={"xl"}
+                      >
+                        Rank
+                      </Th>
+                      <Th
+                        textAlign="center"
+                        border="1px"
+                        borderColor="gray.300"
+                      >
+                        Project
+                      </Th>
+                      <Th
+                        textAlign="center"
+                        border="1px"
+                        borderColor="gray.300"
+                      >
+                        Status
+                      </Th>
+
+                      {(Access === "MANAGER" ||
+                        Access === "ADMIN" ||
+                        Access === "REVIEWER") &&
+                        (pool.poolState === "RegistrationPeriod" ||
+                          pool.poolState === "AllocationPeriod" ||
+                          pool.poolState === "ProjectsRoundTwoEvaluation") &&
+                        toggleReview && (
+                          <Th
+                            textAlign="center"
+                            border="1px"
+                            borderColor="gray.300"
+                          >
+                            Accept?
+                          </Th>
+                        )}
                       {(Access === "MANAGER" || Access === "ADMIN") &&
-                        pool.poolState == "AllocationPeriod" &&
-                        toggleReview && <Th>AllocateVotes</Th>}
-                      <Th>Details</Th>
-                      {toggleReview && <Th>Select</Th>}
+                        pool.poolState === "AllocationPeriod" &&
+                        toggleReview && (
+                          <Th
+                            textAlign="center"
+                            border="1px"
+                            borderColor="gray.300"
+                          >
+                            Allocate Votes
+                          </Th>
+                        )}
+                      <Th
+                        textAlign="center"
+                        border={"1px"}
+                        borderColor="gray.300"
+                      >
+                        Details
+                      </Th>
+                      {/* {toggleReview &&  */}
+                      <Th textAlign="center">Select</Th>
+                      {/* // } */}
                     </Tr>
                   </Thead>
                   <Tbody>
@@ -422,9 +494,21 @@ const Pool = () => {
                         (recipient.reviewStatusRoundOne === "Accepted" ||
                           recipient.reviewStatusRoundOne === "Pending") && (
                           <Tr key={index}>
-                            <Td>
-                              <Flex align="center">
-                                <Text mr={2}>{recipient.name}</Text>
+                            <Td isNumeric borderColor="gray.300">
+                              <Flex textAlign="center" ml={3}>
+                                <Tooltip
+                                  placement="top"
+                                  label={`Recieved ${(
+                                    recipient.poolPercentage * 100
+                                  ).toFixed(2)}% of votes`}
+                                >
+                                  <Text>{index + 1}</Text>
+                                </Tooltip>
+                              </Flex>
+                            </Td>
+                            <Td border="1px" borderColor="gray.300">
+                              <Flex align="center" mx={"23%"}>
+                                <Text>{recipient.name}</Text>
                                 <ChakraLink
                                   as={Button}
                                   onClick={() => {
@@ -440,7 +524,7 @@ const Pool = () => {
                                 </ChakraLink>
                               </Flex>
                             </Td>
-                            <Td>
+                            <Td border="1px" borderColor="gray.300">
                               <Badge
                                 colorScheme={
                                   recipient.reviewStatusRoundOne === "Accepted"
@@ -454,11 +538,7 @@ const Pool = () => {
                                 {recipient.reviewStatusRoundOne}
                               </Badge>
                             </Td>
-                            {pool.poolState != "RegistrationPeriod" && (
-                              <Td isNumeric>
-                                {(recipient.poolPercentage * 100).toFixed(2)}%
-                              </Td>
-                            )}
+
                             {(Access === "MANAGER" ||
                               Access === "ADMIN" ||
                               Access === "REVIEWER") &&
@@ -467,7 +547,11 @@ const Pool = () => {
                                 pool.poolState ==
                                   "ProjectsRoundTwoEvaluation") &&
                               toggleReview && (
-                                <Td textAlign="center">
+                                <Td
+                                  textAlign="center"
+                                  border="1px"
+                                  borderColor="gray.300"
+                                >
                                   <Switch
                                     colorScheme="blue"
                                     defaultChecked={true}
@@ -475,11 +559,19 @@ const Pool = () => {
                                       (!selectedRecipients[
                                         recipient.recipientAddress
                                       ] ||
-                                        recipient.reviewStatusRoundOne ==
-                                          "Accepted" ||
-                                        recipient.reviewStatusRoundOne ==
-                                          "Rejected") &&
-                                      alreadyReviewedRecipient(recipient)
+                                        (recipient.reviewStatusRoundOne ==
+                                          "Accepted" &&
+                                          pool.poolState !=
+                                            "ProjectsRoundTwoEvaluation") ||
+                                        (recipient.reviewStatusRoundOne ==
+                                          "Rejected" &&
+                                          pool.poolState !=
+                                            "ProjectsRoundTwoEvaluation")) &&
+                                      (!alreadyReviewedRecipient(recipient) ||
+                                        (pool.poolState ==
+                                          "ProjectsRoundTwoEvaluation" &&
+                                          recipient.isCanceledRoundTwo ==
+                                            "false"))
                                     }
                                     onChange={(e) => {
                                       handleReviewVoteChange(
@@ -493,7 +585,11 @@ const Pool = () => {
                             {(Access === "MANAGER" || Access === "ADMIN") &&
                               pool.poolState == "AllocationPeriod" &&
                               toggleReview && (
-                                <Td textAlign="center">
+                                <Td
+                                  textAlign="center"
+                                  border="1px"
+                                  borderColor="gray.300"
+                                >
                                   <Input
                                     type="number"
                                     size="sm"
@@ -513,7 +609,11 @@ const Pool = () => {
                                   />
                                 </Td>
                               )}
-                            <Td textAlign="center">
+                            <Td
+                              textAlign="center"
+                              border={"1px"}
+                              borderColor="gray.300"
+                            >
                               <Button
                                 onClick={() =>
                                   handleViewRecipient(recipient.recipientID)
@@ -522,20 +622,18 @@ const Pool = () => {
                                 View
                               </Button>
                             </Td>
-                            {toggleReview && (
-                              <Td textAlign="center">
-                                <Checkbox
-                                  colorScheme="blue"
-                                  className="border border-black rounded-sm"
-                                  onChange={(e) =>
-                                    handleRecipientSelection(
-                                      recipient.recipientAddress,
-                                      e.target.checked
-                                    )
-                                  }
-                                />
-                              </Td>
-                            )}
+                            <Td textAlign="center" borderColor="gray.300">
+                              <Checkbox
+                                colorScheme="blue"
+                                className="border border-black rounded-sm"
+                                onChange={(e) =>
+                                  handleRecipientSelection(
+                                    recipient.recipientAddress,
+                                    e.target.checked
+                                  )
+                                }
+                              />
+                            </Td>
                           </Tr>
                         )
                     )}
@@ -545,7 +643,7 @@ const Pool = () => {
               <div></div>
             </Box>
             <Box w="full" className="flex flex-col items-center mt-5">
-              {pool.poolState == "RegistrationPeriod" ? (
+              {pool.poolState == "RegistrationPeriod" && Access != "NONE" ? (
                 <Button
                   colorScheme="blue"
                   onClick={async () => {
@@ -554,27 +652,30 @@ const Pool = () => {
                 >
                   Review
                 </Button>
-              ) : pool.poolState == "AllocationPeriod" ? (
+              ) : pool.poolState == "AllocationPeriod" &&
+                (Access == "ADMIN" || Access == "MANAGER") ? (
                 <div className="flex flex-col items-center">
-                  {" "}
-                  <Button
-                    colorScheme="blue"
-                    onClick={async () => {
-                      await AllocateVotes(allocationVotes);
-                    }}
-                  >
-                    {`Allocate`}
-                  </Button>
-                  <Text>
-                    Remaining Votes:{" "}
-                    {calculateRemainingCreditsForAllocator(
-                      pool.allocatorsInfo,
-                      account?.toLowerCase(),
-                      pool.poolDetails?.votesPerAllocator
-                    )?.toFixed(0)}
-                  </Text>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                      colorScheme="blue"
+                      onClick={async () => {
+                        await reviewRecipients(reviewVotes, true);
+                      }}
+                    >
+                      Review
+                    </Button>
+                    <Button
+                      colorScheme="blue"
+                      onClick={async () => {
+                        await AllocateVotes(allocationVotes);
+                      }}
+                    >
+                      Allocate
+                    </Button>
+                  </div>
                 </div>
-              ) : pool.poolState == "ProjectsRoundTwoEvaluation" ? (
+              ) : pool.poolState == "ProjectsRoundTwoEvaluation" &&
+                Access != "NONE" ? (
                 <div>
                   <Button
                     colorScheme="blue"
@@ -586,16 +687,22 @@ const Pool = () => {
                   </Button>
                 </div>
               ) : (
-                <div>
-                  <Button
-                    colorScheme="blue"
-                    onClick={async () => {
-                      await Distribute();
-                    }}
-                  >
-                    Distribute
-                  </Button>
-                </div>
+                (pool.poolState == "WaitingForStreamDistribution" ||
+                  pool.poolState == "WaitingForFinalDistribution") &&
+                Access == "ADMIN" && (
+                  <div>
+                    <Button
+                      colorScheme="blue"
+                      onClick={async () => {
+                        await Distribute();
+                      }}
+                    >
+                      {pool.poolState == "WaitingForStreamDistribution"
+                        ? "DistributeRoundOne"
+                        : "DistributeRoundTwo"}
+                    </Button>
+                  </div>
+                )
               )}
             </Box>
 

@@ -16,7 +16,7 @@ const Navbar = () => {
           <div className="flex justify-center mx-auto">
             <div className=" px-1 py-1 rounded-3xl flex mt-4 ">
               <div
-                onClick={() => router.push("/userOrgs")}
+                onClick={() => router.push("/userProfiles")}
                 className="bg-gray-100 rounded-3xl px-2 py-1 mx-1 cursor-pointer "
               >
                 <p className=" text-center text-md font-semibold my-auto text-black">
@@ -24,7 +24,7 @@ const Navbar = () => {
                 </p>
               </div>
               <div
-                onClick={() => router.push("/create")}
+                onClick={() => router.push("/pools")}
                 className="bg-gray-100 rounded-3xl px-2 py-1 mx-1 cursor-pointer"
               >
                 <p className="text-center text-md font-semibold my-auto text-black">

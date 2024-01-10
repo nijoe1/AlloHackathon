@@ -27,7 +27,7 @@
     "pages/pool.jsx",
     "components/ManageOrganizationTab.jsx",
     "pages/profile.jsx",
-    "pages/userOrgs.tsx",
+    "pages/userProfiles.tsx",
     "components/RegisteredPoolsTable.jsx"
   ],
   "exclude": ["node_modules"]

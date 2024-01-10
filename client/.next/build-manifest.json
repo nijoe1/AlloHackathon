@@ -22,15 +22,25 @@
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/profile": [
+    "/create": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/profile.js"
+      "static/chunks/pages/create.js"
     ],
-    "/userOrgs": [
+    "/pool": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/userOrgs.js"
+      "static/chunks/pages/pool.js"
+    ],
+    "/pools": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/pools.js"
+    ],
+    "/userProfiles": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/userProfiles.js"
     ]
   },
   "ampFirstPages": []

@@ -116,7 +116,7 @@ const Create = () => {
       });
 
       setTimeout(() => {
-        router.push("/userOrgs"); // Replace '/' with the path to your home page
+        router.push("/userProfiles"); // Replace '/' with the path to your home page
       }, 1000);
 
       // Now you can proceed to use these CIDs as needed

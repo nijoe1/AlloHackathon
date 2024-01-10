@@ -13,7 +13,7 @@ import {
   Input,
   Textarea,
   Select,
-  Toast,
+  useToast,
 } from "@chakra-ui/react";
 
 import { getUserAdminOrgs } from "@/utils/utils";

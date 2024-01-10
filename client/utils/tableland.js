@@ -277,20 +277,20 @@ export const getProfileDetails = async (profileID) => {
 export const getAllActivePools = async (time) => {
   const query = `
         SELECT 
-           DISTINCT p.poolID,
+            p.poolID,
             json_object(
                 'strategy', p.strategy,
                 'votesPerAllocator', p.votesPerAllocator,
                 'threshold', p.threshold,
-                'RoundOnePercentage', p.ROP,
-                'RegistrationStartTime', p.RSTs,
-                'RegistrationEndTime', p.RETs,
-                'AllocationStartTime', p.RETs,
-                'AllocationEndTime', p.AETs,
+                'ROP', p.ROP,
+                'RSTs', p.RSTs,
+                'RETs', p.RETs,
+                'ASTs', p.RETs,
                 'DistributionStartTime', p.DONET,
-                'ProjectsWorkingDuration', p.PWDs,
-                'ProjectsReviewDuration', p.PRDs,
-                'PoolMetadata', pp_reg.metadata,
+                'AETs', p.AETs,
+                'PWDs', p.PWDs,
+                'PRDs', p.PRDs,
+                'poolMetadata', pp_reg.metadata,
                 'creatorName', profile.name,
                 'creatorMetadata', profile.metadata,
                 'creatorProfileID', profile.profileID
@@ -386,7 +386,8 @@ export const getPool = async (poolID) => {
       'poolMetadata', pp_pool.metadata,
       'creatorName', creator_profile.name,
       'creatorMetadata', creator_profile.metadata,
-      'adminHat', creator_profile.adminHat
+      'adminHat', creator_profile.adminHat,
+      'creatorProfileID', creator_profile.profileID
   ) AS poolDetails,
   (
       SELECT json_group_array(

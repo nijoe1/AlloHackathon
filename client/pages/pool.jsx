@@ -49,6 +49,7 @@ import {
   getTime,
   alreadyReviewedRecipient,
   getUserProfileRole,
+  formatDuration,
 } from "@/utils/utils";
 
 import { STRATEGY_ABI } from "@/constants/QVHatsSablierStrategy";
@@ -361,13 +362,13 @@ const Pool = () => {
               className="text-black font-bold"
               p={6}
               mx="35%"
-              mt={"5%"}
+              mt="5%"
               borderRadius="lg"
               boxShadow="md"
             >
               <Badge
                 colorScheme={
-                  Access == "ADMIN"
+                  Access === "ADMIN"
                     ? "red"
                     : Access === "MANAGER"
                       ? "purple"
@@ -377,40 +378,102 @@ const Pool = () => {
               >
                 {`You are wearing the ${Access} Hat`}
               </Badge>
+
               <AspectRatio ratio={1} w="150px" mb={4}>
                 <Image
                   src={
                     detailsFetched
                       ? `data:image/png;base64,${pool?.metadata.image}`
-                      : "https://ipfs.io/ipfs/Qmf9bVdXsccGcuissvdKdkW4fkm8mhh37EDtEqZDeiGqZX"
+                      : "placeholder_image_url"
                   }
                   alt="Pool Image"
                   borderRadius="full"
                 />
               </AspectRatio>
-              <Text fontSize="3xl" fontWeight="bold">
+
+              <Text fontSize="3xl" fontWeight="bold" mb={2}>
                 {detailsFetched ? pool?.metadata.name : "Loading Pool Name..."}
               </Text>
-              <Text fontSize="md">
-                {detailsFetched
-                  ? pool.metadata.description
-                  : "Loading Description..."}
+
+              <Text
+                bg="gray.100"
+                rounded="md"
+                borderTop="1px"
+                borderColor="gray.300"
+                fontSize="sm"
+                color="gray.700"
+                p={3}
+                mb={2}
+                noOfLines={3}
+                overflowY="scroll"
+                className="flex flex-col items-center"
+              >
+                {pool.metadata.description}
               </Text>
+
               <Badge
                 colorScheme={
                   pool.poolState === "RegistrationPeriod" ? "green" : "red"
                 }
+                mb={4}
               >
                 {pool.poolState} {pool.remainingTime}
               </Badge>
-              <Stack direction="row" spacing={4} mt={4}>
-                <Text>Round One Distribution: {pool.poolDetails?.ROP}%</Text>
-                <Text>Pool Amount: {pool.poolAmount} DAI</Text>
-              </Stack>
-              {pool.poolState == "RegistrationPeriod" && (
-                <Button colorScheme="blue" mt={4} onClick={openRegModal}>
-                  Apply in pool
-                </Button>
+
+              <Flex
+                className="flex items-center text-center"
+                direction="row"
+                align="center"
+                gap={8}
+                mb={4}
+              >
+                <Tooltip
+                  placement="top"
+                  label="Round One Distribution Percentage"
+                >
+                  <div className="flex flex-col items-center border border-gray-300 border-1 p-2 rounded">
+                    <Text>ROD</Text>
+                    <Text>{pool.poolDetails?.ROP}%</Text>
+                  </div>
+                </Tooltip>
+                <div className="flex flex-col items-center border border-gray-300 border-1 p-2 rounded">
+                  <Text>Pool Amount </Text>
+                  <Text>{pool.poolAmount} DAI</Text>
+                </div>
+                <Tooltip placement="top" label="Projects Working Duration">
+                  <div className="flex flex-col items-center border border-gray-300 border-1 p-2 rounded">
+                    <Text>PWD </Text>
+                    <Text>{formatDuration(pool.poolDetails?.PWDs)}</Text>
+                  </div>
+                </Tooltip>
+                <Tooltip
+                  placement="top"
+                  label="Voting Threshold is the amount of votes that someone needs to get accepted or rejected from the pool"
+                >
+                  <div className="flex flex-col items-center border border-gray-300 border-1 p-2 rounded">
+                    <Text>Threshold </Text>
+                    <Text>{pool.poolDetails?.threshold}</Text>
+                  </div>
+                </Tooltip>
+              </Flex>
+
+              {pool.poolState === "RegistrationPeriod" && (
+                <div className="flex flex-wrap items-center gap-4">
+                  <Button
+                    colorScheme="blue"
+                    onClick={() => {
+                      router.push({
+                        pathname: `/profile`,
+                        query: { orgID: pool.poolDetails?.creatorProfileID },
+                      });
+                    }}
+                  >
+                    View Creator
+                  </Button>
+                  <Button colorScheme="blue" onClick={openRegModal}>
+                    Apply in Pool
+                  </Button>
+                </div>
               )}
             </Flex>
 

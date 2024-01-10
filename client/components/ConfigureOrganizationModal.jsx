@@ -19,7 +19,6 @@ import {
 
 import ManageOrganizationTab from "./ManageOrganizationTab";
 import CreatePoolModal from "./CreatePoolModal";
-import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 
 const ConfigureOrganizationModal = ({ profileID }) => {
 
@@ -37,7 +36,6 @@ const ConfigureOrganizationModal = ({ profileID }) => {
     },
   });
   const { isOpen, onOpen, onClose } = useDisclosure();
-  // ... other states and hooks
 
   return (
     <div className="flex flex-col items-center mt-5 bg-gray-100">
@@ -60,7 +58,7 @@ const ConfigureOrganizationModal = ({ profileID }) => {
               <Tabs variant="enclosed" isFitted>
                 <TabList mb="1em">
                   <Tab>Create Pool</Tab>
-                  <Tab>Manage Organization</Tab>
+                  <Tab>Manage Hats</Tab>
                 </TabList>
 
                 <TabPanels>

@@ -36,7 +36,6 @@ import {
 } from "@/utils/tableland";
 
 import {
-  calculateRemainingTime,
   formatCurrency,
   getUserProfileRole,
   processPoolStateAndRemainingTime,
@@ -49,8 +48,6 @@ import {
 import { DAI_ABI, DAI_ADDRESS } from "@/constants/DAI";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 
-// ... Existing dummyCreatedPools and other imports
-
 const OrganizationProfile = () => {
   const router = useRouter();
   const { orgID } = router.query;
@@ -58,14 +55,13 @@ const OrganizationProfile = () => {
   const [balance, setBalance] = useState(0);
   const [anchor, setAnchor] = useState("");
   const [registeredPools, setRegisteredPools] = useState([]);
-  const [fundsInfo, setFundsInfo] = useState({}); // { fundsRecieved, fundsDistributed }
+  const [fundsInfo, setFundsInfo] = useState({});
   const [detailsFetched, setDetailsFetched] = useState(false);
   const [creatorMetadata, setCreatorMetadata] = useState([]);
   const [Access, setAccess] = useState("USER");
   const { address: account } = useAccount();
   const publicClient = usePublicClient();
-  const { data: walletClient } = useWalletClient();
-  const [currentTime, setCurrentTime] = useState(0); // Current time in seconds since epoch
+  const [currentTime, setCurrentTime] = useState(0);
 
   const getTime = async () => {
     const time = await publicClient.readContract({
@@ -156,11 +152,10 @@ const OrganizationProfile = () => {
   }, [orgID, detailsFetched]);
 
   return (
-    <div className="bg-gradient-to-r from-gray via-gray to-gray-800 rounded-md my-[7%]">
+    <div className="bg-gradient-to-r from-gray via-gray to-gray-800  my-[7%]">
       {detailsFetched ? (
         <Box className="gray-130" w="full">
           <Flex
-            // className="bg-gradient-to-r from-gray via-gray to-gray-800 rounded-md"
             direction="column"
             align="center"
             bg="gray.200"
@@ -320,17 +315,19 @@ const OrganizationProfile = () => {
                       </AspectRatio>
 
                       <Text
-                        fontSize="sm"
-                        bg="gray.100"
                         p={3}
-                        mt={2}
-                        mb={3}
+                        mt={3}
+                        mb={2}
+                        bg="gray.100"
                         rounded="md"
                         borderTop="1px"
+                        borderColor={"gray.300"}
+                        fontSize="sm"
+                        color="gray.700"
+                        noOfLines={3}
+                        overflowY={"scroll"}
                       >
-                        {pool.metadata.description
-                          ? pool.metadata.description
-                          : "Pool Description"}
+                        {pool.metadata.description}
                       </Text>
 
                       <Badge

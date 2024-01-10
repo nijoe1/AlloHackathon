@@ -266,6 +266,7 @@ const CreatePoolModal = (profileID: any) => {
       toast({
         title: "Profile Metadata Uploaded successfully",
         status: "success",
+        colorScheme: "blue",
       });
 
       const res = await createPool(metadataCid);
@@ -280,6 +281,7 @@ const CreatePoolModal = (profileID: any) => {
       toast({
         title: "Pool Created successfully",
         status: "success",
+        colorScheme: "blue",
       });
 
       setTimeout(() => {

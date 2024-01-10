@@ -17,10 +17,14 @@ import {
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { SABLIER_ABI, SABLIER_ADDRESS } from "@/constants/Sablier";
 import { DAI_ABI, DAI_ADDRESS } from "@/constants/DAI";
-import { CONTRACT_ADDRESS, CONTRACT_ABI } from "@/constants/RocketFundingRegistry";
+import {
+  CONTRACT_ADDRESS,
+  CONTRACT_ABI,
+} from "@/constants/RocketFundingRegistry";
 import { encodeFunctionData } from "viem";
 import { formatCurrency, filterStreamsByRecipient } from "@/utils/utils";
 import { getRecipientStreams } from "@/utils/graphFunctions";
+import Loading from "@/components/Animation/Loading";
 
 const PoolsTable = ({
   pools,
@@ -30,6 +34,7 @@ const PoolsTable = ({
   current,
   Access,
 }) => {
+  const toast = useToast();
   const { address: account } = useAccount();
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
@@ -41,7 +46,7 @@ const PoolsTable = ({
       let Streams = await getRecipientStreams(anchorAddress.toLowerCase());
       const streamInfo = filterStreamsByRecipient(
         Streams.streams,
-        anchorAddress,
+        anchorAddress
       );
       setStreamInfo(streamInfo);
 
@@ -70,7 +75,7 @@ const PoolsTable = ({
       const rate = stream.depositAmount / stream.duration;
       return BigInt(elapsedTime) * BigInt(rate);
     },
-    [currentTime],
+    [currentTime]
   );
 
   const HandleWithdrawStream = async (streamID) => {
@@ -103,8 +108,15 @@ const PoolsTable = ({
       const transaction = await publicClient.waitForTransactionReceipt({
         hash: hash,
       });
+      toast({
+        title: "You Successfully Withdrew the StreamID " + streamID,
+        status: "success",
+        colorScheme: "blue",
+      });
+      setTimeout(() => {
+        router.reload(); // Replace '/' with the path to your home page
+      }, 1500);
       return true;
-      console.log(transaction);
     } catch (error) {
       console.log(error);
       return false;
@@ -129,6 +141,13 @@ const PoolsTable = ({
       // @ts-ignore
       const hash = await walletClient.writeContract(approve.request);
       console.log("Transaction Sent");
+
+      toast({
+        title: "You Successfully Approved anchor to withdraw DAI",
+        status: "success",
+        colorScheme: "blue",
+      });
+
       const transaction = await publicClient.waitForTransactionReceipt({
         hash: hash,
       });
@@ -148,10 +167,20 @@ const PoolsTable = ({
         hash: hash2,
       });
 
+      toast({
+        title:
+          "You Successfully Transfered DAI from Anchor to your profile admin account",
+        status: "success",
+        colorScheme: "blue",
+      });
+
       if (!walletClient) {
         console.log("Wallet client not found");
         return;
       }
+      setTimeout(() => {
+        router.reload(); // Replace '/' with the path to your home page
+      }, 1000);
       return true;
     } catch (error) {
       console.log(error);
@@ -226,7 +255,7 @@ const PoolsTable = ({
                               <Text key={index}>
                                 Withdrawn:{" "}
                                 {formatCurrency(
-                                  stream.depositAmount - stream.intactAmount,
+                                  stream.depositAmount - stream.intactAmount
                                 )}
                               </Text>
                             </div>
@@ -268,7 +297,7 @@ const PoolsTable = ({
           </Box>
         </div>
       ) : (
-        <div>Loading....</div>
+        <Loading></Loading>
       )}
     </div>
   );

@@ -21,7 +21,7 @@ import {
   Tr,
   Th,
   Td,
-  useColorModeValue,
+  useToast,
   Stack,
   Link as ChakraLink,
   Checkbox,
@@ -37,10 +37,9 @@ import Loading from "@/components/Animation/Loading";
 
 import RegistrationModal from "@/components/RegistrationModal";
 
-import { getAllPoolsRegisteredByProfile, getPool } from "@/utils/tableland";
+import { getPool } from "@/utils/tableland";
 
 import {
-  calculateActualCredits,
   calculateRemainingCreditsForAllocator,
   formatCurrency,
   processPoolStateAndRemainingTime,
@@ -64,6 +63,7 @@ import { AbiCoder } from "ethers";
 
 const Pool = () => {
   const router = useRouter();
+  const toast = useToast();
   const { poolID } = router.query;
   const [pool, setPool] = useState([]);
   const [recipients, setRecipients] = useState([]);
@@ -156,6 +156,16 @@ const Pool = () => {
       const transaction = await publicClient.waitForTransactionReceipt({
         hash: hash,
       });
+      toast({
+        title: "You Successfully reviewed the pool applicants",
+        status: "success",
+        colorScheme: "blue",
+      });
+
+      setTimeout(() => {
+        router.reload();
+      }, 1500);
+
       return true;
     } catch (error) {
       console.log(error);
@@ -172,7 +182,7 @@ const Pool = () => {
     for (let i = 0; i < recipientIDs.length; i++) {
       let data = abiCoder.encode(
         ["address", "uint256"],
-        [recipientIDs[i], votes[i]],
+        [recipientIDs[i], votes[i]]
       );
       dataArray.push(data);
       poolIDs.push(poolID);
@@ -197,6 +207,17 @@ const Pool = () => {
       const transaction = await publicClient.waitForTransactionReceipt({
         hash: hash,
       });
+
+      toast({
+        title:
+          "You Successfully allocated creadits to the selected pool applicants",
+        status: "success",
+        colorScheme: "blue",
+      });
+
+      setTimeout(() => {
+        router.reload(); // Replace '/' with the path to your home page
+      }, 1500);
       return true;
     } catch (error) {
       console.log(error);
@@ -230,9 +251,25 @@ const Pool = () => {
       const transaction = await publicClient.waitForTransactionReceipt({
         hash: hash,
       });
+      let distributionRound =
+        pool.poolState == "WaitingForStreamDistribution"
+          ? "Initiated the RoundOne Streams Distribution"
+          : "Initiated the RoundTwo FinalDistribution";
+      toast({
+        title: "You Successfully" + distributionRound,
+        status: "success",
+        colorScheme: "blue",
+      });
+      setTimeout(() => {
+        router.reload(); // Replace '/' with the path to your home page
+      }, 1500);
       return true;
     } catch (error) {
       console.log(error);
+      toast({
+        title: "Distribution failed only admin can distribute",
+        status: "erorr",
+      });
       return false;
     }
   };
@@ -288,7 +325,7 @@ const Pool = () => {
 
       const role = await getUserProfileRole(
         account,
-        processedPools[0]?.poolDetails.adminHat,
+        processedPools[0]?.poolDetails.adminHat
       );
       setAccess(role);
       console.log(processedPools);
@@ -297,7 +334,7 @@ const Pool = () => {
 
       if (processedPools[0]?.allocatorsInfo && registrants) {
         let percentages = calculateQuadraticVotingPercentages(
-          processedPools[0].allocatorsInfo,
+          processedPools[0].allocatorsInfo
         );
         registrants.forEach((registrant) => {
           registrant.poolPercentage = percentages[registrant.recipientID];
@@ -399,7 +436,7 @@ const Pool = () => {
                           ? `Allocate VotesRemaining: ${calculateRemainingCreditsForAllocator(
                               pool.allocatorsInfo,
                               account?.toLowerCase(),
-                              pool.poolDetails?.votesPerAllocator,
+                              pool.poolDetails?.votesPerAllocator
                             )}`
                           : pool.poolState == "ProjectsRoundTwoEvaluation"
                             ? "Evaluate Projects"
@@ -574,7 +611,7 @@ const Pool = () => {
                                     onChange={(e) => {
                                       handleReviewVoteChange(
                                         recipient.recipientAddress,
-                                        e.target.checked ? 2 : 3,
+                                        e.target.checked ? 2 : 3
                                       );
                                     }}
                                   />
@@ -600,7 +637,7 @@ const Pool = () => {
                                     onChange={(e) => {
                                       handleAllocationVoteChange(
                                         recipient.recipientAddress,
-                                        e.target.value,
+                                        e.target.value
                                       );
                                       // Update your allocation object here as needed
                                     }}
@@ -627,13 +664,13 @@ const Pool = () => {
                                 onChange={(e) =>
                                   handleRecipientSelection(
                                     recipient.recipientAddress,
-                                    e.target.checked,
+                                    e.target.checked
                                   )
                                 }
                               />
                             </Td>
                           </Tr>
-                        ),
+                        )
                     )}
                   </Tbody>
                 </Table>

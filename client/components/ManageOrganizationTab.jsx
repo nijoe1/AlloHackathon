@@ -15,7 +15,7 @@ import {
   Switch,
   Center,
   Text,
-  Icon,
+  useToast,
   VStack,
   chakra,
 } from "@chakra-ui/react";
@@ -40,6 +40,8 @@ const ManageOrganizationTab = ({ orgID }) => {
   const [showRemoveToggle, setShowRemoveToggle] = useState(false);
   const [members, setMembers] = useState();
   const [Hats, setHats] = useState();
+  const toast = useToast();
+
   useEffect(() => {
     async function fetch() {
       let res = await getOrgMembers(orgID);
@@ -113,6 +115,15 @@ const ManageOrganizationTab = ({ orgID }) => {
       const transaction = await publicClient.waitForTransactionReceipt({
         hash: hash,
       });
+
+      toast({
+        title: "You weared the hat to new members successfully",
+        status: "success",
+        colorScheme: "blue",
+      });
+      setTimeout(() => {
+        router.reload(); // Replace '/' with the path to your home page
+      }, 1000);
       return true;
     } catch (error) {
       return false;

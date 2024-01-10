@@ -2,7 +2,10 @@ import { useToast } from "@chakra-ui/react";
 import { Avatar, Wrap, WrapItem } from "@chakra-ui/react";
 
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
-import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/constants/HackRegistry";
+import {
+  CONTRACT_ABI,
+  CONTRACT_ADDRESS,
+} from "@/constants/RocketFundingRegistry";
 
 import React, { useState, useRef } from "react";
 import {
@@ -92,6 +95,7 @@ const Create = () => {
       toast({
         title: "Profile Metadata Uploaded successfully",
         status: "success",
+        colorScheme: "blue",
       });
 
       setIsProcessingTransaction(true);
@@ -108,10 +112,11 @@ const Create = () => {
       toast({
         title: "Profile Created successfully",
         status: "success",
+        colorScheme: "blue",
       });
 
       setTimeout(() => {
-        router.push("/"); // Replace '/' with the path to your home page
+        router.push("/userOrgs"); // Replace '/' with the path to your home page
       }, 1000);
 
       // Now you can proceed to use these CIDs as needed

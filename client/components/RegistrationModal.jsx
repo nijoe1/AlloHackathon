@@ -20,13 +20,16 @@ import { getUserAdminOrgs } from "@/utils/utils";
 
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import axios from "axios";
-import { CONTRACT_ADDRESS, CONTRACT_ABI } from "@/constants/RocketFundingRegistry";
+import {
+  CONTRACT_ADDRESS,
+  CONTRACT_ABI,
+} from "@/constants/RocketFundingRegistry";
 import router from "next/router";
 
 const RegistrationModal = ({ isOpen, onClose, onSubmit, poolID }) => {
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
-
+  const toast = useToast();
   const [projects, setProjects] = useState([]);
   const [fetched, setFetched] = useState(false);
   const { address: account } = useAccount();
@@ -73,7 +76,6 @@ const RegistrationModal = ({ isOpen, onClose, onSubmit, poolID }) => {
   }, [fetched, isOpen]);
 
   const registerProfileInPool = async (metadata) => {
-    console.log(await formData.selectedProjectId);
     try {
       const data = await publicClient?.simulateContract({
         account,
@@ -100,11 +102,19 @@ const RegistrationModal = ({ isOpen, onClose, onSubmit, poolID }) => {
       // @ts-ignore
       const hash = await walletClient.writeContract(data.request);
       console.log(hash);
-      console.log("Transaction Sent");
+      toast({
+        title: "You Successfully registered your project in the pool",
+        status: "success",
+        colorScheme: "blue",
+      });
+
       const transaction = await publicClient.waitForTransactionReceipt({
         hash: hash,
       });
       setIsProcessingTransaction(false);
+      setTimeout(() => {
+        router.reload(); // Replace '/' with the path to your home page
+      }, 1000);
       return true;
     } catch (error) {
       return false;
@@ -138,6 +148,7 @@ const RegistrationModal = ({ isOpen, onClose, onSubmit, poolID }) => {
       Toast({
         title: "Profile Metadata Uploaded successfully",
         status: "success",
+        colorScheme: "blue",
       });
 
       const res = await registerProfileInPool(metadataCid);
@@ -149,18 +160,17 @@ const RegistrationModal = ({ isOpen, onClose, onSubmit, poolID }) => {
         });
         return;
       }
-      Toast({
-        title: "Pool Created successfully",
-        status: "success",
-      });
 
       setTimeout(() => {
-        router.reload(); // Replace '/' with the path to your home page
-      }, 1300);
+        router.reload();
+      }, 1500);
 
       // Now you can proceed to use these CIDs as needed
     } catch (error) {
-      Toast({ title: "Error Creating Pool", status: "error" });
+      Toast({
+        title: "Error Registring your Profile into the pool",
+        status: "error",
+      });
     }
     onClose();
   };

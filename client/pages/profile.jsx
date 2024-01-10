@@ -42,7 +42,10 @@ import {
   processPoolStateAndRemainingTime,
 } from "@/utils/utils";
 
-import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/constants/RocketFundingRegistry";
+import {
+  CONTRACT_ABI,
+  CONTRACT_ADDRESS,
+} from "@/constants/RocketFundingRegistry";
 import { DAI_ABI, DAI_ADDRESS } from "@/constants/DAI";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 
@@ -117,6 +120,7 @@ const OrganizationProfile = () => {
     const fetchData = async () => {
       // const profile = await getProfileDetails(orgID);
       const profile = await getProfilesData([orgID]);
+      if (!profile[0]?.adminHat) return;
       const role = await getUserProfileRole(account, profile[0].adminHat);
       const regPools = await getAllPoolsRegisteredByProfile(orgID);
       setRegisteredPools(regPools);
@@ -140,7 +144,7 @@ const OrganizationProfile = () => {
 
       const pools = await getAllPoolsCreatedByProfile(orgID);
       let creatorMetadata = await axios.get(
-        `https://ipfs.io/ipfs/${profile[0]?.metadata}`,
+        `https://ipfs.io/ipfs/${profile[0]?.metadata}`
       );
       setCreatorMetadata(creatorMetadata.data);
       const processedPools = await processPoolsWithMetadata(pools, time);
@@ -162,7 +166,7 @@ const OrganizationProfile = () => {
             bg="gray.200"
             p={6}
             mx="35%"
-            mt="3.7%"
+            mt="5%"
             borderRadius="lg"
             boxShadow="lg"
             border="1px"
@@ -198,10 +202,20 @@ const OrganizationProfile = () => {
                 ? creatorMetadata.name
                 : "Loading Pool Name..."}
             </Text>
-            <Text fontSize="md" color="gray.700">
-              {creatorMetadata.description
-                ? creatorMetadata.description
-                : "Loading Description..."}
+            <Text
+              p={3}
+              mt={3}
+              mb={2}
+              bg="gray.100"
+              rounded="md"
+              borderTop="1px"
+              borderColor={"gray.300"}
+              fontSize="sm"
+              color="gray.700"
+              noOfLines={5}
+              overflowY={"scroll"}
+            >
+              {creatorMetadata.description}
             </Text>
             <Stack
               direction="col"
@@ -210,10 +224,10 @@ const OrganizationProfile = () => {
               mt={8}
             >
               <Badge colorScheme="green">{`Total Distributed: ${formatCurrency(
-                fundsInfo.fundsDistributed,
+                fundsInfo.fundsDistributed
               )}`}</Badge>
               <Badge colorScheme="blue">{`Total Received: ${formatCurrency(
-                fundsInfo.fundsReceived,
+                fundsInfo.fundsReceived
               )}`}</Badge>
             </Stack>
             {Access == "ADMIN" && (

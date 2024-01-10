@@ -22,8 +22,6 @@ import CreatePoolModal from "./CreatePoolModal";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 
 const ConfigureOrganizationModal = ({ profileID }) => {
-  const publicClient = usePublicClient();
-  const { data: walletClient } = useWalletClient();
 
   const StyledModalBody = chakra(ModalBody, {
     baseStyle: {

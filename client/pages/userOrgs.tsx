@@ -107,7 +107,7 @@ const Index = () => {
                 {`You are wearing the ${orgData.type} Hat`}
               </Badge>
 
-              <Box textAlign="center">
+              <Box className="flex flex-col items-center" textAlign="center">
                 <Text mb={2} fontWeight="bold" fontSize="xl">
                   {orgData.profileData[0].name}
                 </Text>
@@ -131,7 +131,8 @@ const Index = () => {
                 borderColor={"gray.300"}
                 fontSize="sm"
                 color="gray.700"
-                noOfLines={2}
+                noOfLines={3}
+                overflowY={"scroll"}
               >
                 {orgData.description}
               </Text>

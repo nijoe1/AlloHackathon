@@ -33,7 +33,7 @@ const ConfigureOrganizationModal = ({ profileID }) => {
         width: "4px",
       },
       "::-webkit-scrollbar-thumb": {
-        background: "gray.200",
+        background: "gray.300",
         borderRadius: "24px",
       },
     },
@@ -51,8 +51,8 @@ const ConfigureOrganizationModal = ({ profileID }) => {
           <ModalCloseButton />
           <StyledModalBody>
             <Center>
-              <Tabs variant="enclosed" isFitted>
-                <TabList mb="1em">
+              <Tabs variant="enclosed" isFitted >
+                <TabList mb="1em" >
                   <Tab>Create Pool</Tab>
                   <Tab>Manage Organization</Tab>
                 </TabList>

@@ -4,7 +4,7 @@ require("hardhat-deploy-ethers")
 const { ethers } = require("hardhat")
 const { Console } = require("console")
 
-const alloAbi = require("../contracts/a/allo.json")
+// const alloAbi = require("../contracts/a/allo.json")
 
 const private_key = network.config.accounts[0]
 const wallet = new ethers.Wallet(private_key, ethers.provider)
@@ -31,7 +31,7 @@ module.exports = async ({ deployments }) => {
         eligibility_module_implementation,
     ]
 
-    const HackRegistry = await deploy("HackRegistry", {
+    const RocketFundingRegistry = await deploy("RocketFundingRegistry", {
         from: wallet.address,
         args: registryParams,
         log: true,
@@ -43,19 +43,21 @@ module.exports = async ({ deployments }) => {
     //     constructorArguments: registryParams,
     // })
 
-    console.log("HackRegistry:", HackRegistry.address)
+    console.log("RocketFundingRegistry:", RocketFundingRegistry.address)
 
-    const _HackRegistry = await ethers.getContractFactory("HackRegistry")
-    const HackRegistryInstance = _HackRegistry.attach(HackRegistry.address)
+    const _RocketFundingRegistry = await ethers.getContractFactory("RocketFundingRegistry")
+    const RocketFundingRegistryInstance = _RocketFundingRegistry.attach(
+        RocketFundingRegistry.address
+    )
 
-    const table1 = await HackRegistryInstance.tables(0)
-    const table2 = await HackRegistryInstance.tables(1)
-    const table3 = await HackRegistryInstance.tables(2)
-    const table4 = await HackRegistryInstance.tables(3)
-    const table5 = await HackRegistryInstance.tables(4)
-    const table6 = await HackRegistryInstance.tables(5)
+    const table1 = await RocketFundingRegistryInstance.tables(0)
+    const table2 = await RocketFundingRegistryInstance.tables(1)
+    const table3 = await RocketFundingRegistryInstance.tables(2)
+    const table4 = await RocketFundingRegistryInstance.tables(3)
+    const table5 = await RocketFundingRegistryInstance.tables(4)
+    const table6 = await RocketFundingRegistryInstance.tables(5)
 
-    console.log(table1,'-',table2,'-',table3,'-',table4,'-',table5,'-',table6)
+    console.log(table1, "-", table2, "-", table3, "-", table4, "-", table5, "-", table6)
 
     const StrategyParams = [Allo, "QVHatsSablierStrategy"]
 
@@ -81,12 +83,12 @@ module.exports = async ({ deployments }) => {
 
     // ------------------- Step 1 -------------------
 
-    // const setStrategyTx = await HackRegistryInstance.setPoolStrategyImplementation(
-    //     QVHatsSablierStrategy.address
-    // )
-    // await setStrategyTx.wait()
+    const setStrategyTx = await RocketFundingRegistryInstance.setPoolStrategyImplementation(
+        QVHatsSablierStrategy.address
+    )
+    await setStrategyTx.wait()
 
-    // console.log("setStrategy done")
+    console.log("setStrategy done")
 
     // const createProfileTx = await HackRegistryInstance.createProfile("kk", [1, "skatoula"], {
     //     gasLimit: 10000000000,
@@ -148,7 +150,7 @@ module.exports = async ({ deployments }) => {
     const PoolStrategy = "0xe7c0d008c30d2b2c2c25ce60a76dd9f87ceb9262"
     const poolID = 94
 
-    const AlloInstance = new ethers.Contract(Allo, alloAbi, wallet)
+    // const AlloInstance = new ethers.Contract(Allo, alloAbi, wallet)
 
     const AbiCoder = new ethers.utils.AbiCoder()
 
@@ -199,60 +201,3 @@ module.exports = async ({ deployments }) => {
 
     // console.log("distributed")
 }
-
-function sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-// console.log("dai minted")
-
-// const AproveDai = await daiContract.approve(
-//     LockupLinearStreamCreator.address,
-//     BigInt("1000000000000000000000000000000000000")
-// )
-// await AproveDai.wait()
-
-// console.log("dai approved")
-
-// const AproveDai2 = await daiContract.approve(
-//     "0x483bdd560dE53DC20f72dC66ACdB622C5075de34",
-//     BigInt("10000000000")
-// )
-// await AproveDai2.wait()
-
-// console.log("dai approved")
-
-// const CreateStream = await LockupLinearStreamCreatorInstance.createStream(
-//     // Amount of tokens to stream
-//     BigInt("100"),
-//     "0x464e3F471628E162FA34F130F4C3bCC41fF7635d",
-
-//     { gasLimit: 100000000 }
-// )
-// console.log(CreateStream)
-// await CreateStream.wait()
-
-// const sablier = new ethers.Contract(
-//     "0xa3e36b51B7A456812c92253780f4B15bad56e34c",
-//     Sablier,
-//     wallet
-// )
-// struct CreateWithDurations {
-//     address sender;
-//     address recipient;
-//     uint128 totalAmount;
-//     IERC20 asset;
-//     bool cancelable;
-//     Durations durations;
-//     Broker broker;
-// }
-// const stream = await sablier.createWithDurations([
-//     "0x044B595C9b94A17Adc489bD29696af40ccb3E4d2",
-//     "0x464e3F471628E162FA34F130F4C3bCC41fF7635d",
-//     100,
-//     "0x8d573a4EBe0AC93d9cBCF1A3046C91DbF2ADD45A",
-//     false,
-//     [0, 3600],
-//     ["0x0000000000000000000000000000000000000000", "0x00"],
-// ])
-// await stream.wait()

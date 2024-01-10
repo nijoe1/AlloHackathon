@@ -83,5 +83,4 @@ interface IRegistryIndexer {
         uint256[] memory streamID,
         address[] memory recipientIDs
     ) external;
-
 }

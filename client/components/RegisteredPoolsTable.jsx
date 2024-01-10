@@ -17,7 +17,7 @@ import {
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { SABLIER_ABI, SABLIER_ADDRESS } from "@/constants/Sablier";
 import { DAI_ABI, DAI_ADDRESS } from "@/constants/DAI";
-import { CONTRACT_ADDRESS, CONTRACT_ABI } from "@/constants/HackRegistry";
+import { CONTRACT_ADDRESS, CONTRACT_ABI } from "@/constants/RocketFundingRegistry";
 import { encodeFunctionData } from "viem";
 import { formatCurrency, filterStreamsByRecipient } from "@/utils/utils";
 import { getRecipientStreams } from "@/utils/graphFunctions";
@@ -41,7 +41,7 @@ const PoolsTable = ({
       let Streams = await getRecipientStreams(anchorAddress.toLowerCase());
       const streamInfo = filterStreamsByRecipient(
         Streams.streams,
-        anchorAddress
+        anchorAddress,
       );
       setStreamInfo(streamInfo);
 
@@ -70,7 +70,7 @@ const PoolsTable = ({
       const rate = stream.depositAmount / stream.duration;
       return BigInt(elapsedTime) * BigInt(rate);
     },
-    [currentTime]
+    [currentTime],
   );
 
   const HandleWithdrawStream = async (streamID) => {
@@ -208,8 +208,8 @@ const PoolsTable = ({
                       pool.poolDetails.isCanceledRoundTwo != "true"
                         ? "Accepted"
                         : pool.poolDetails.reviewStatusRoundOne != "Accepted"
-                        ? "Rejected"
-                        : "CancelledRoundTwo"}
+                          ? "Rejected"
+                          : "CancelledRoundTwo"}
                     </Td>
                     <Td>
                       {pool.distributions
@@ -226,7 +226,7 @@ const PoolsTable = ({
                               <Text key={index}>
                                 Withdrawn:{" "}
                                 {formatCurrency(
-                                  stream.depositAmount - stream.intactAmount
+                                  stream.depositAmount - stream.intactAmount,
                                 )}
                               </Text>
                             </div>

@@ -54,7 +54,7 @@ export default async function handler(req, res) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${JWT}`,
           },
-        }
+        },
       );
 
       res.status(200).json({

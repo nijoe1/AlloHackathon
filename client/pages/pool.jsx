@@ -52,8 +52,6 @@ import {
   getUserProfileRole,
 } from "@/utils/utils";
 
-import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/constants/HackRegistry";
-
 import { STRATEGY_ABI } from "@/constants/QVHatsSablierStrategy";
 
 import { DAI_ABI, DAI_ADDRESS } from "@/constants/DAI";
@@ -174,7 +172,7 @@ const Pool = () => {
     for (let i = 0; i < recipientIDs.length; i++) {
       let data = abiCoder.encode(
         ["address", "uint256"],
-        [recipientIDs[i], votes[i]]
+        [recipientIDs[i], votes[i]],
       );
       dataArray.push(data);
       poolIDs.push(poolID);
@@ -290,7 +288,7 @@ const Pool = () => {
 
       const role = await getUserProfileRole(
         account,
-        processedPools[0]?.poolDetails.adminHat
+        processedPools[0]?.poolDetails.adminHat,
       );
       setAccess(role);
       console.log(processedPools);
@@ -299,7 +297,7 @@ const Pool = () => {
 
       if (processedPools[0]?.allocatorsInfo && registrants) {
         let percentages = calculateQuadraticVotingPercentages(
-          processedPools[0].allocatorsInfo
+          processedPools[0].allocatorsInfo,
         );
         registrants.forEach((registrant) => {
           registrant.poolPercentage = percentages[registrant.recipientID];
@@ -335,8 +333,8 @@ const Pool = () => {
                   Access == "ADMIN"
                     ? "red"
                     : Access === "MANAGER"
-                    ? "purple"
-                    : "blue"
+                      ? "purple"
+                      : "blue"
                 }
                 mb={5}
               >
@@ -398,14 +396,14 @@ const Pool = () => {
                       {pool.poolState == "RegistrationPeriod"
                         ? "Review Projects"
                         : pool.poolState == "AllocationPeriod"
-                        ? `Allocate VotesRemaining: ${calculateRemainingCreditsForAllocator(
-                            pool.allocatorsInfo,
-                            account?.toLowerCase(),
-                            pool.poolDetails?.votesPerAllocator
-                          )}`
-                        : pool.poolState == "ProjectsRoundTwoEvaluation"
-                        ? "Evaluate Projects"
-                        : ""}
+                          ? `Allocate VotesRemaining: ${calculateRemainingCreditsForAllocator(
+                              pool.allocatorsInfo,
+                              account?.toLowerCase(),
+                              pool.poolDetails?.votesPerAllocator,
+                            )}`
+                          : pool.poolState == "ProjectsRoundTwoEvaluation"
+                            ? "Evaluate Projects"
+                            : ""}
                     </Text>
                     <div className="flex flex-wrap items-center">
                       <Switch
@@ -530,9 +528,9 @@ const Pool = () => {
                                   recipient.reviewStatusRoundOne === "Accepted"
                                     ? "green"
                                     : recipient.reviewStatusRoundOne ===
-                                      "Rejected"
-                                    ? "red"
-                                    : "yellow"
+                                        "Rejected"
+                                      ? "red"
+                                      : "yellow"
                                 }
                               >
                                 {recipient.reviewStatusRoundOne}
@@ -576,7 +574,7 @@ const Pool = () => {
                                     onChange={(e) => {
                                       handleReviewVoteChange(
                                         recipient.recipientAddress,
-                                        e.target.checked ? 2 : 3
+                                        e.target.checked ? 2 : 3,
                                       );
                                     }}
                                   />
@@ -602,7 +600,7 @@ const Pool = () => {
                                     onChange={(e) => {
                                       handleAllocationVoteChange(
                                         recipient.recipientAddress,
-                                        e.target.value
+                                        e.target.value,
                                       );
                                       // Update your allocation object here as needed
                                     }}
@@ -629,13 +627,13 @@ const Pool = () => {
                                 onChange={(e) =>
                                   handleRecipientSelection(
                                     recipient.recipientAddress,
-                                    e.target.checked
+                                    e.target.checked,
                                   )
                                 }
                               />
                             </Td>
                           </Tr>
-                        )
+                        ),
                     )}
                   </Tbody>
                 </Table>

@@ -41,7 +41,7 @@ const Index = () => {
     const orgsWithMetadata = await Promise.all(
       orgs.map(async (org) => {
         const metadata = await fetchIPFSMetadata(
-          `${org?.profileData[0]?.ProfileMetadata}`
+          `${org?.profileData[0]?.ProfileMetadata}`,
         );
 
         let obj = {
@@ -56,7 +56,7 @@ const Index = () => {
           github: metadata?.githubLink,
         };
         return obj;
-      })
+      }),
     );
 
     setOrganizations(orgsWithMetadata);
@@ -99,8 +99,8 @@ const Index = () => {
                   orgData.type === "ADMIN"
                     ? "red"
                     : orgData.type === "MANAGER"
-                    ? "purple"
-                    : "blue"
+                      ? "purple"
+                      : "blue"
                 }
                 mb={3}
               >
@@ -175,7 +175,7 @@ const Index = () => {
                 w="full"
                 onClick={() =>
                   router.push(
-                    `/profile?orgID=${orgData?.profileData[0]?.profileID}`
+                    `/profile?orgID=${orgData?.profileData[0]?.profileID}`,
                   )
                 }
               >

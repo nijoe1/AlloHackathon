@@ -10,7 +10,7 @@ import {
 import axios from "axios";
 import { getPublicClient } from "wagmi/actions";
 
-import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/constants/HackRegistry";
+import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/constants/RocketFundingRegistry";
 
 const publicClient = getPublicClient();
 
@@ -226,13 +226,13 @@ export const processPoolStateAndRemainingTime = (pool, currentTime) => {
     poolState = "RegistrationPeriod";
     remainingTime = calculateRemainingTime(
       currentTime,
-      BigInt(pool.poolDetails.RETs)
+      BigInt(pool.poolDetails.RETs),
     );
   } else if (0 < BigInt(pool.poolDetails.AETs) - currentTime) {
     poolState = "AllocationPeriod";
     remainingTime = calculateRemainingTime(
       currentTime,
-      BigInt(pool.poolDetails.AETs)
+      BigInt(pool.poolDetails.AETs),
     );
   } else if (pool.poolDetails.DistributionStartTime == 0) {
     poolState = "WaitingForStreamDistribution";
@@ -247,7 +247,7 @@ export const processPoolStateAndRemainingTime = (pool, currentTime) => {
     remainingTime = calculateRemainingTime(
       currentTime,
       BigInt(pool.poolDetails.DistributionStartTime) +
-        BigInt(pool.poolDetails.PWDs)
+        BigInt(pool.poolDetails.PWDs),
     );
   } else if (
     0 <=
@@ -261,7 +261,7 @@ export const processPoolStateAndRemainingTime = (pool, currentTime) => {
       currentTime,
       BigInt(pool.poolDetails.DistributionStartTime) +
         BigInt(pool.poolDetails.PWDs) +
-        BigInt(pool.poolDetails.PRDs)
+        BigInt(pool.poolDetails.PRDs),
     );
   } else if (!IsSecondDistributionDone(pool.registeredRecipients)) {
     poolState = "WaitingForFinalDistribution";
@@ -280,7 +280,7 @@ function IsSecondDistributionDone(recipients) {
   if (!recipients.distributions) return false;
   for (const recipient of recipients) {
     const secondDistribution = recipient.distributions.find(
-      (distribution) => distribution.streamID === "0"
+      (distribution) => distribution.streamID === "0",
     );
 
     if (secondDistribution) {
@@ -329,7 +329,7 @@ export const calculateQuadraticVotingPercentages = (allocators) => {
   // Calculate total votes sum
   let totalVotesSum = Object.values(totalVotes).reduce(
     (sum, current) => sum + current,
-    0
+    0,
   );
 
   // Calculate percentage of total votes for each recipient
@@ -344,13 +344,13 @@ export const calculateQuadraticVotingPercentages = (allocators) => {
 export const calculateRemainingCreditsForAllocator = (
   allocators,
   allocatorID,
-  maxCredits
+  maxCredits,
 ) => {
   // Find the unique allocator entry
 
   if (!allocators) return maxCredits;
   const allocator = allocators.find(
-    (allocator) => allocator.allocatorID === allocatorID
+    (allocator) => allocator.allocatorID === allocatorID,
   );
 
   if (!allocator) {
@@ -381,7 +381,7 @@ export const calculateRemainingCreditsForAllocator = (
 
 export const fetchRecipientMetadata = async (recipient) => {
   const metadataResponse = await axios.get(
-    `https://ipfs.io/ipfs/${recipient.metadata}`
+    `https://ipfs.io/ipfs/${recipient.metadata}`,
   );
   return metadataResponse.data;
 };
@@ -406,7 +406,7 @@ export const getTime = async () => {
 export const alreadyReviewedRecipient = (recipient) => {
   try {
     return recipient.reviews.some(
-      (review) => review.reviewedBy === account.toLowerCase()
+      (review) => review.reviewedBy === account.toLowerCase(),
     );
   } catch {
     return false;
@@ -415,16 +415,16 @@ export const alreadyReviewedRecipient = (recipient) => {
 
 export const filterStreamsByRecipient = (streams, recipient) => {
   const filteredStreams = streams.filter(
-    (stream) => stream.recipient === recipient
+    (stream) => stream.recipient === recipient,
   );
   const streamInfoMap = new Map();
   filteredStreams.forEach((stream) => {
     streamInfoMap.set(
       stream.id.replace(
         "0x483bdd560de53dc20f72dc66acdb622c5075de34-421614-",
-        ""
+        "",
       ),
-      stream
+      stream,
     );
   });
   return streamInfoMap;

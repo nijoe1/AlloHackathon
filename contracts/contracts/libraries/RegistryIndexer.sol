@@ -143,22 +143,14 @@ abstract contract RegistryIndexer {
         addProfileInPool(poolID, profileID, profileAddress, true, metadata);
     }
 
-    function AddFirstDistributionTime(
-        uint256 poolID
-    ) internal {
+    function AddFirstDistributionTime(uint256 poolID) internal {
         mutate(
             tableIDs[2],
             SQLHelpers.toUpdate(
                 POOLS_TABLE_PREFIX,
                 tableIDs[2],
-                string.concat(
-                    "DONET=",
-                    SQLHelpers.quote(Strings.toString(block.timestamp))
-                ),
-                string.concat(
-                    "poolID=",
-                    SQLHelpers.quote(Strings.toString(poolID))
-                )
+                string.concat("DONET=", SQLHelpers.quote(Strings.toString(block.timestamp))),
+                string.concat("poolID=", SQLHelpers.quote(Strings.toString(poolID)))
             )
         );
     }

@@ -4,12 +4,12 @@ const TablelandGateway =
   "https://testnets.tableland.network/api/v1/query?statement=";
 
 const tables = {
-  pools: "pools_421614_425",
-  profilePools: "profilePools_421614_424",
-  profiles: "profiles_421614_423",
-  poolsReviews: "pools_reviews_421614_426",
-  poolsAllocations: "pools_allocations_421614_427",
-  poolsDistributions: "pools_distributions_421614_428",
+  pools: "pools_421614_443",
+  profilePools: "profilePools_421614_442",
+  profiles: "profiles_421614_441",
+  poolsReviews: "pools_reviews_421614_444",
+  poolsAllocations: "pools_allocations_421614_445",
+  poolsDistributions: "pools_distributions_421614_446",
 };
 
 export const getAllProfilesAdminHat = async () => {
@@ -245,7 +245,7 @@ export const getAllPoolsRegisteredByProfile = async (profileID) => {
 
   try {
     const response = await axios.get(
-      `${TablelandGateway}${encodeURIComponent(query)}`
+      `${TablelandGateway}${encodeURIComponent(query)}`,
     );
     return response.data;
   } catch (error) {
@@ -265,7 +265,7 @@ export const getProfileDetails = async (profileID) => {
       profile.profileID = '${profileID}'`;
   try {
     const response = await axios.get(
-      `${TablelandGateway}${encodeURIComponent(query)}`
+      `${TablelandGateway}${encodeURIComponent(query)}`,
     );
     return response.data;
   } catch (error) {
@@ -356,7 +356,7 @@ export const getProfilesData = async (profileIDs) => {
       `${TablelandGateway}${encodeURIComponent(query)}`,
       {
         params: profileIDs,
-      }
+      },
     );
     return response.data;
   } catch (error) {

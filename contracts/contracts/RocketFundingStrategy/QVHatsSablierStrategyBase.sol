@@ -145,39 +145,7 @@ abstract contract QVHatsSablierStrategyBase is BaseStrategy, Types {
     ) internal {
         __BaseStrategy_init(_poolId);
 
-        address _registryIndexer;
-        address _lockupLinear;
-        address _hats;
-
-        (_registryIndexer, _lockupLinear, _hats) = abi.decode(
-            _params.data,
-            (address, address, address)
-        );
-
-        registryIndexer = IRegistryIndexer(_registryIndexer);
-
-        lockupLinear = ISablierV2LockupLinear(_lockupLinear);
-
-        hats = IHats(_hats);
-
-        _registry = allo.getRegistry();
-
-        voteThreshold = _params.voteThreshold;
-
-        reviewerHatId = _params.reviewerHatId;
-
-        poolManagerHatId = _params.poolManagerHatId;
-
-        if (_params.roundOnePercentage > 100) revert INVALID_ROUND_ONE_PERCENTAGE();
-
-        roundOnePercentage = _params.roundOnePercentage;
-
-        registrationStartTime = uint40(block.timestamp) + _params.registrationBeginsIn;
-        registrationEndTime = registrationStartTime + _params.registrationDuration;
-        allocationStartTime = registrationEndTime;
-        allocationEndTime = allocationStartTime + _params.allocationDuration;
-        projectsWorkingDuration = _params.projectsWorkingDuration;
-        projectsOutComeReviewDuration = _params.projectsOutComeReviewDuration;
+        __initRocketFundingStrategy(_params);
     }
 
     /// @notice Submit application to pool
@@ -377,8 +345,13 @@ abstract contract QVHatsSablierStrategyBase is BaseStrategy, Types {
                     i++;
                 }
             }
-            registryIndexer.InsertDistributions(poolId, distributionPeriod, amounts, streamIDs, _recipientIds);
-            
+            registryIndexer.InsertDistributions(
+                poolId,
+                distributionPeriod,
+                amounts,
+                streamIDs,
+                _recipientIds
+            );
         } else if (distributionPeriod == 2) {
             _distributeRoundTwo(_recipientIds, _sender);
         }
@@ -675,6 +648,42 @@ abstract contract QVHatsSablierStrategyBase is BaseStrategy, Types {
 
         // Transfer the tokens to the 'msg.sender' (pool manager calling function)
         _transferAmount(_token, msg.sender, amount);
+    }
+
+    function __initRocketFundingStrategy(InitializeParamsQVHatsSablier memory _params) internal {
+        address _registryIndexer;
+        address _lockupLinear;
+        address _hats;
+
+        (_registryIndexer, _lockupLinear, _hats) = abi.decode(
+            _params.data,
+            (address, address, address)
+        );
+
+        registryIndexer = IRegistryIndexer(_registryIndexer);
+
+        lockupLinear = ISablierV2LockupLinear(_lockupLinear);
+
+        hats = IHats(_hats);
+
+        _registry = allo.getRegistry();
+
+        voteThreshold = _params.voteThreshold;
+
+        reviewerHatId = _params.reviewerHatId;
+
+        poolManagerHatId = _params.poolManagerHatId;
+
+        if (_params.roundOnePercentage > 100) revert INVALID_ROUND_ONE_PERCENTAGE();
+
+        roundOnePercentage = _params.roundOnePercentage;
+
+        registrationStartTime = uint40(block.timestamp) + _params.registrationBeginsIn;
+        registrationEndTime = registrationStartTime + _params.registrationDuration;
+        allocationStartTime = registrationEndTime;
+        allocationEndTime = allocationStartTime + _params.allocationDuration;
+        projectsWorkingDuration = _params.projectsWorkingDuration;
+        projectsOutComeReviewDuration = _params.projectsOutComeReviewDuration;
     }
 
     /// @notice Contract should be able to receive NATIVE

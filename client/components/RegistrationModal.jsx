@@ -20,7 +20,7 @@ import { getUserAdminOrgs } from "@/utils/utils";
 
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import axios from "axios";
-import { CONTRACT_ADDRESS, CONTRACT_ABI } from "@/constants/HackRegistry";
+import { CONTRACT_ADDRESS, CONTRACT_ABI } from "@/constants/RocketFundingRegistry";
 import router from "next/router";
 
 const RegistrationModal = ({ isOpen, onClose, onSubmit, poolID }) => {
@@ -82,7 +82,7 @@ const RegistrationModal = ({ isOpen, onClose, onSubmit, poolID }) => {
         functionName: "registerRecipient",
         args: [
           poolID,
-          formData.selectedProjectId ,
+          formData.selectedProjectId,
           {
             protocol: BigInt(1),
             pointer: metadata,

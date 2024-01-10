@@ -45,7 +45,7 @@ const Create = () => {
     setFile(fileUploaded);
     setProfileDetails({ ...profileDetails, profileImage: fileUploaded.name });
   };
-  
+
   const { address: account } = useAccount();
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();

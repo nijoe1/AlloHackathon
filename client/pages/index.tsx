@@ -26,7 +26,7 @@ export default function Home() {
                 onClick={() =>
                   window.open(
                     "https://github.com/nijoe1/AlloHackathon",
-                    "_blank"
+                    "_blank",
                   )
                 }
                 className="mt-5 bg-gradient-to-r from-indigo-200 to bg-indigo-500 hover:from-indigo-500 hover:to-indigo-200 text-white font-bold py-2 px-4 rounded-full"
@@ -46,7 +46,7 @@ export default function Home() {
               Powered By
             </h2>
             <div className="flex flex-wrap justify-center  items-center gap-8">
-              <div>
+              <div className="flex flex-col items-center text-center">
                 <img
                   src={
                     "https://gateway.lighthouse.storage/ipfs/QmUsSbCJbBAxVshMjfho9tdtXaWMfDxY4Skshja7ZAwZsf"
@@ -56,7 +56,7 @@ export default function Home() {
                 />
                 <p className="text-bolder text-gray-100 text-2xl mt-2">Allo</p>
               </div>
-              <div>
+              <div className="flex flex-col items-center text-center">
                 <img
                   src="https://gateway.lighthouse.storage/ipfs/QmZCYxNUHghpEg7V59a2dXYC1C7DdxEayiwrYpJV9jwoaN"
                   alt="Sablier"
@@ -66,13 +66,23 @@ export default function Home() {
                   Sablier
                 </p>
               </div>
-              <div>
+              <div className="flex flex-col items-center text-center">
                 <img
                   src="https://gateway.lighthouse.storage/ipfs/QmY8chhuhg6DxatLdpGQvCjFHwpBxxiWmQSvuFymw6tZ5S"
                   alt="Hats"
                   className="h-16 rounded-xl"
                 />
                 <p className="text-bolder text-gray-100 text-2xl mt-2">Hats</p>
+              </div>
+              <div className="flex flex-col items-center text-center">
+                <img
+                  src="https://gateway.lighthouse.storage/ipfs/QmX817fdeegqAKkYXTZ5Q9fSYyXMgy7uEXfs1GWE8AKNdT"
+                  alt="Hats"
+                  className="h-16 rounded-xl"
+                />
+                <p className="text-bolder text-gray-100 text-2xl mt-2">
+                  Tableland
+                </p>
               </div>
             </div>
           </div>

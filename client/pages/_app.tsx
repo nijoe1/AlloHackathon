@@ -6,18 +6,16 @@ import "@rainbow-me/rainbowkit/styles.css";
 import {
   getDefaultWallets,
   RainbowKitProvider,
-  darkTheme,
   lightTheme,
 } from "@rainbow-me/rainbowkit";
 import { configureChains, createConfig, WagmiConfig } from "wagmi";
 import { arbitrumSepolia, arbitrum } from "wagmi/chains";
 import { publicProvider } from "wagmi/providers/public";
 import { useRouter } from "next/router";
-import Footer from "@/components/Footer";
 
 const { chains, publicClient } = configureChains(
   [arbitrumSepolia, arbitrum],
-  [publicProvider()]
+  [publicProvider()],
 );
 
 const { connectors } = getDefaultWallets({
@@ -50,7 +48,6 @@ export default function App({ Component, pageProps }: AppProps) {
         >
           <Navbar />
           <Component {...pageProps} />
-          {/* <Footer /> */}
         </RainbowKitProvider>
       </WagmiConfig>
     </ChakraProvider>

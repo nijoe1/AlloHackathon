@@ -18,7 +18,7 @@ import {
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
-import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/constants/HackRegistry";
+import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/constants/RocketFundingRegistry";
 import { DAI_ABI, DAI_ADDRESS } from "@/constants/DAI";
 import { useRouter } from "next/router";
 import axios from "axios";
@@ -100,7 +100,7 @@ const CreatePoolModal = (profileID: any) => {
       if (poolForm.startingPoolAmount > 0) {
         setIsProcessingApproval(true);
         const approveTransactionHash = await walletClient?.writeContract(
-          approve.request
+          approve.request,
         );
         const ApprovalTransaction =
           await publicClient.waitForTransactionReceipt({
@@ -118,7 +118,7 @@ const CreatePoolModal = (profileID: any) => {
           profileID.profileID,
           {
             maxVoiceCreditsPerAllocator: BigInt(
-              poolForm.maxVotesPerAllocator + 1
+              poolForm.maxVotesPerAllocator + 1,
             ),
             params: {
               roundOnePercentage: poolForm.roundOnePercentage,
@@ -127,22 +127,22 @@ const CreatePoolModal = (profileID: any) => {
               registrationDuration: calculateTime(
                 poolForm.RegistrationDurationDays,
                 poolForm.RegistrationDurationHours,
-                poolForm.RegistrationDurationMinutes
+                poolForm.RegistrationDurationMinutes,
               ),
               allocationDuration: calculateTime(
                 poolForm.allocationDurationDays,
                 poolForm.allocationDurationHours,
-                poolForm.allocationDurationMinutes
+                poolForm.allocationDurationMinutes,
               ),
               projectsWorkingDuration: calculateTime(
                 poolForm.projectsWorkingDurationDays,
                 poolForm.projectsWorkingDurationHours,
-                poolForm.projectsWorkingDurationMinutes
+                poolForm.projectsWorkingDurationMinutes,
               ),
               projectsOutComeReviewDuration: calculateTime(
                 poolForm.projectsReviewingDurationDays,
                 poolForm.projectsReviewingDurationHours,
-                poolForm.projectsReviewingDurationMinutes
+                poolForm.projectsReviewingDurationMinutes,
               ),
               reviewerHatId: BigInt(0),
               poolManagerHatId: BigInt(0),
@@ -223,9 +223,9 @@ const CreatePoolModal = (profileID: any) => {
         calculateTime(
           poolForm.allocationDurationDays,
           poolForm.allocationDurationHours,
-          poolForm.allocationDurationMinutes
-        )
-      )
+          poolForm.allocationDurationMinutes,
+        ),
+      ),
     );
     formData.append(
       "projectsWorkingDurationDays",
@@ -233,9 +233,9 @@ const CreatePoolModal = (profileID: any) => {
         calculateTime(
           poolForm.projectsWorkingDurationDays,
           poolForm.projectsWorkingDurationHours,
-          poolForm.projectsWorkingDurationMinutes
-        )
-      )
+          poolForm.projectsWorkingDurationMinutes,
+        ),
+      ),
     );
     formData.append(
       "projectsReviewingDurationDays",
@@ -243,14 +243,14 @@ const CreatePoolModal = (profileID: any) => {
         calculateTime(
           poolForm.projectsReviewingDurationDays,
           poolForm.projectsReviewingDurationHours,
-          poolForm.projectsReviewingDurationMinutes
-        )
-      )
+          poolForm.projectsReviewingDurationMinutes,
+        ),
+      ),
     );
     formData.append("roundOnePercentage", String(poolForm.roundOnePercentage));
     formData.append(
       "maxVotesPerAllocator",
-      String(poolForm.maxVotesPerAllocator)
+      String(poolForm.maxVotesPerAllocator),
     );
 
     setIsUploading(true); // Start uploading

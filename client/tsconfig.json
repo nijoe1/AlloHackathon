@@ -17,6 +17,18 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "components/Animation", "utils/tableland.js", "components/CreatePoolModal.tsx", "pages/pool.jsx", "components/ManageOrganizationTab.jsx", "pages/profile.jsx", "pages/userOrgs.tsx", "components/RegisteredPoolsTable.jsx"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "components/Animation",
+    "utils/tableland.js",
+    "components/CreatePoolModal.tsx",
+    "pages/pool.jsx",
+    "components/ManageOrganizationTab.jsx",
+    "pages/profile.jsx",
+    "pages/userOrgs.tsx",
+    "components/RegisteredPoolsTable.jsx"
+  ],
   "exclude": ["node_modules"]
 }

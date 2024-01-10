@@ -42,7 +42,7 @@ import {
   processPoolStateAndRemainingTime,
 } from "@/utils/utils";
 
-import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/constants/HackRegistry";
+import { CONTRACT_ABI, CONTRACT_ADDRESS } from "@/constants/RocketFundingRegistry";
 import { DAI_ABI, DAI_ADDRESS } from "@/constants/DAI";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 
@@ -140,7 +140,7 @@ const OrganizationProfile = () => {
 
       const pools = await getAllPoolsCreatedByProfile(orgID);
       let creatorMetadata = await axios.get(
-        `https://ipfs.io/ipfs/${profile[0]?.metadata}`
+        `https://ipfs.io/ipfs/${profile[0]?.metadata}`,
       );
       setCreatorMetadata(creatorMetadata.data);
       const processedPools = await processPoolsWithMetadata(pools, time);
@@ -154,10 +154,7 @@ const OrganizationProfile = () => {
   return (
     <div className="bg-gradient-to-r from-gray via-gray to-gray-800 rounded-md my-[7%]">
       {detailsFetched ? (
-        <Box
-          className="gray-130"
-          w="full"
-        >
+        <Box className="gray-130" w="full">
           <Flex
             // className="bg-gradient-to-r from-gray via-gray to-gray-800 rounded-md"
             direction="column"
@@ -178,8 +175,8 @@ const OrganizationProfile = () => {
                 Access == "ADMIN"
                   ? "red"
                   : Access === "MANAGER"
-                  ? "purple"
-                  : "blue"
+                    ? "purple"
+                    : "blue"
               }
               mb={5}
             >
@@ -213,10 +210,10 @@ const OrganizationProfile = () => {
               mt={8}
             >
               <Badge colorScheme="green">{`Total Distributed: ${formatCurrency(
-                fundsInfo.fundsDistributed
+                fundsInfo.fundsDistributed,
               )}`}</Badge>
               <Badge colorScheme="blue">{`Total Received: ${formatCurrency(
-                fundsInfo.fundsReceived
+                fundsInfo.fundsReceived,
               )}`}</Badge>
             </Stack>
             {Access == "ADMIN" && (
@@ -328,8 +325,8 @@ const OrganizationProfile = () => {
                           pool.poolState === "RegistrationPeriod"
                             ? "green"
                             : pool.poolState === "AllocationPeriod"
-                            ? "red"
-                            : "yellow"
+                              ? "red"
+                              : "yellow"
                         }
                       >
                         {pool.poolState + " " + pool.remainingTime}

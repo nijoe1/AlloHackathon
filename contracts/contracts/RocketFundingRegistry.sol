@@ -13,17 +13,22 @@ import {RegistryIndexer} from "./libraries/RegistryIndexer.sol";
 import {IRegistry} from "./interfaces/IRegistry.sol";
 import {Clone} from "./libraries/Clone.sol";
 
-contract HackRegistry is RegistryIndexer {
-    IHats public Hats;
+contract RocketFundingRegistry is RegistryIndexer {
+    // To clone eligible modules for the hats
     IHatsModuleFactory public HatsModuleFactory;
+    // Hats contract interface
+    IHats public Hats;
+    // Allo contract interface
     IAllo public Allo;
+    // Anchor contract interface
     IAnchor public Anchor;
-
+    // The clonable module to use for the hats
     address internal module;
+    // The clonable strategy to use for the pools
     address internal strategy_implementation;
-
+    // Nonce used to generate the 'anchor' address
     uint256 deployNonce;
-
+    // Data to pass to the strategy when creating a pool
     bytes initData;
 
     constructor(
@@ -109,10 +114,10 @@ contract HackRegistry is RegistryIndexer {
         initializeParams.params.poolManagerHatId = profile.poolManagerHatId;
         initializeParams.params.data = initData;
 
-        if(_amount > 0){
+        if (_amount > 0) {
             IERC20(_token).transferFrom(msg.sender, address(this), _amount);
             IERC20(_token).approve(address(Allo), _amount);
-        } 
+        }
 
         address strategy = Clone.createClone(strategy_implementation, deployNonce++);
 
@@ -185,8 +190,7 @@ contract HackRegistry is RegistryIndexer {
         IAnchor(anchor).execute(_target, _value, _data);
     }
 
-    /// ONLY POOL STRATEGY CAN CALL THESE FUNCTIONS
-
+    /// ONLY A POOL STRATEGY CAN CALL THESE FUNCTIONS
     function RegisterProfile(address profileID, uint256 poolID, string memory metadata) external {
         _checkCallerIsPoolStrategy(poolID);
 
@@ -227,8 +231,7 @@ contract HackRegistry is RegistryIndexer {
 
         InsertDistributionsToPool(poolID, distributionAmount, streamID, recipientIDs);
 
-        if(round == 1) AddFirstDistributionTime(poolID);
-
+        if (round == 1) AddFirstDistributionTime(poolID);
     }
 
     function _checkCallerIsPoolStrategy(uint256 _poolId) internal view {

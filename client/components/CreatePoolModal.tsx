@@ -245,7 +245,7 @@ const CreatePoolModal = (profileID: any) => {
 
     try {
       const response = await axios.post("/api/uploadPool", formData);
-      const {  metadataCid } = response.data;
+      const { metadataCid } = response.data;
 
       console.log("Metadata uploaded to IPFS with CID:", metadataCid);
 
@@ -282,7 +282,7 @@ const CreatePoolModal = (profileID: any) => {
 
   return (
     <>
-      <VStack spacing={4} width={300}>
+      <VStack spacing={4} width={300} bg={"gray.300"}>
         <FormControl isRequired>
           <FormLabel>Pool Name</FormLabel>
           <Input
@@ -306,6 +306,22 @@ const CreatePoolModal = (profileID: any) => {
             placeholder="Enter pool description"
           />
         </FormControl>
+        {/* <HStack spacing="2">
+          <Button
+            onClick={() => handleClick()}
+            leftIcon={<MdOutlineAttachFile />}
+          >
+            Upload Image
+          </Button>
+          <Text fontSize="sm">{file ? file.name : "No file selected"}</Text>
+          <input
+            type="file"
+            ref={hiddenFileInput}
+            onChange={handleFileChange}
+            style={{ display: "none" }}
+            accept="image/*"
+          />
+        </HStack> */}
         <FormControl isRequired>
           <FormLabel>Pool Image</FormLabel>
           <Input type="file" onChange={handleFileChange} accept="image/*" />

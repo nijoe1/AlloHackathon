@@ -120,7 +120,7 @@ const ManageOrganizationTab = ({ orgID }) => {
   };
 
   return (
-    <VStack spacing={4} width="full">
+    <VStack spacing={4} width="full" className="bg-gray-300">
       <Center>
         <div className="flex flex-wrap items-center gap-2 ">
           <Text fontSize="md" fontWeight="semibold" textAlign="center" mb={4}>

@@ -22,7 +22,6 @@ import { fileToBase64 } from "@/utils/utils";
 
 import { BsTwitterX } from "react-icons/bs";
 
-import Navbar from "@/components/navbar";
 import axios from "axios";
 import { useRouter } from "next/router";
 

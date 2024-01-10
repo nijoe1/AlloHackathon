@@ -41,7 +41,7 @@ import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 
 // ... Existing dummyCreatedPools and other imports
 
-const OrganizationProfile = (profileID) => {
+const OrganizationProfile = () => {
   const router = useRouter();
   const { orgID, Access } = router.query;
   const [createdPools, setCreatedPools] = useState([]);
@@ -143,9 +143,12 @@ const OrganizationProfile = (profileID) => {
   }, [orgID, detailsFetched]);
 
   return (
-    <div  className="bg-gradient-to-r from-gray via-gray to-gray-800 rounded-md">
+    <div className="bg-gradient-to-r from-gray via-gray to-gray-800 rounded-md">
       {!detailsFetched ? (
-        <Box  className="bg-gradient-to-r from-gray via-gray to-gray-800 rounded-md" w="full">
+        <Box
+          className="bg-gradient-to-r from-gray via-gray to-gray-800 rounded-md"
+          w="full"
+        >
           <Flex
             className="bg-gradient-to-r from-gray via-gray to-gray-800 rounded-md"
             direction="column"
@@ -189,7 +192,7 @@ const OrganizationProfile = (profileID) => {
               <Badge colorScheme="blue">Total Received: $200K</Badge>
             </Stack>
 
-            {Access === "ADMIN" && (
+            {true && (
               <div className="flex flex-col items-center mt-5">
                 <ConfigureOrganizationModal profileID={orgID} />
               </div>

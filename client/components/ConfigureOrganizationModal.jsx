@@ -43,16 +43,24 @@ const ConfigureOrganizationModal = ({ profileID }) => {
 
   return (
     <>
-      <Button colorScheme={"blue"}onClick={onOpen}>Configure Organization</Button>
-      <Modal isOpen={isOpen} onClose={onClose} isCentered size="4xl">
+      <Button colorScheme={"blue"} onClick={onOpen}>
+        Configure Organization
+      </Button>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        isCentered
+        size="4xl"
+        bg={"gray.300"}
+      >
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Configure Organization</ModalHeader>
           <ModalCloseButton />
           <StyledModalBody>
             <Center>
-              <Tabs variant="enclosed" isFitted >
-                <TabList mb="1em" >
+              <Tabs variant="enclosed" isFitted>
+                <TabList mb="1em">
                   <Tab>Create Pool</Tab>
                   <Tab>Manage Organization</Tab>
                 </TabList>

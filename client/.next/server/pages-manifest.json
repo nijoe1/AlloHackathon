@@ -1,10 +1,1 @@
-{
-  "/_app": "pages/_app.js",
-  "/_error": "pages/_error.js",
-  "/_document": "pages/_document.js",
-  "/pool": "pages/pool.js",
-  "/userProfiles": "pages/userProfiles.js",
-  "/profile": "pages/profile.js",
-  "/pools": "pages/pools.js",
-  "/create": "pages/create.js"
-}
+{"/_app":"pages/_app.js","/_error":"pages/_error.js","/_document":"pages/_document.js","/create":"pages/create.html","/":"pages/index.html","/pool":"pages/pool.html","/pools":"pages/pools.html","/profile":"pages/profile.html","/userProfiles":"pages/userProfiles.html","/api/uploadPool":"pages/api/uploadPool.js","/api/uploadProfile":"pages/api/uploadProfile.js","/api/uploadRegistrant":"pages/api/uploadRegistrant.js","/404":"pages/404.html"}

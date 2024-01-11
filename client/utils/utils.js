@@ -23,21 +23,21 @@ export const formatCurrency = (value) => {
 
   let formattedValue;
 
-  if (value <= BigInt(1000)) {
+  if (value < BigInt(1000)) {
     // If value is less than a thousand
     formattedValue = `$${value.toString()}`;
-  } else if (value <= BigInt(100000)) {
+  } else if (value < BigInt(1000000)) {
     // If value is less than a million
-    formattedValue = `$${(value + BigInt(1)) / BigInt(1000)}K`;
-  } else if (value <= BigInt(1000000000)) {
+    formattedValue = `$${value / BigInt(1000)}K`;
+  } else if (value < BigInt(1000000000)) {
     // If value is less than a billion
-    formattedValue = `$${(value + BigInt(1)) / BigInt(1000000)}M`;
-  } else if (value <= BigInt(1000000000000)) {
+    formattedValue = `$${value / BigInt(1000000)}M`;
+  } else if (value < BigInt(1000000000000)) {
     // If value is less than a trillion
-    formattedValue = `$${(value + BigInt(1)) / BigInt(1000000000)}B`;
+    formattedValue = `$${value / BigInt(1000000000)}B`;
   } else {
     // If value is a trillion or more
-    formattedValue = `$${(value + BigInt(1)) / BigInt(1000000000000)}T`;
+    formattedValue = `$${value / BigInt(1000000000000)}T`;
   }
 
   return formattedValue;

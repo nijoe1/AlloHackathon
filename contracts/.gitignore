@@ -12,6 +12,7 @@ typechain
 
 # don't push the environment vars!
 .env
+yarn.lock
 
 # Built application files
 .DS*

@@ -2,8 +2,7 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/pools": "pages/pools.js",
   "/userProfiles": "pages/userProfiles.js",
-  "/pool": "pages/pool.js",
-  "/api/uploadRegistrant": "pages/api/uploadRegistrant.js"
+  "/profile": "pages/profile.js",
+  "/create": "pages/create.js"
 }

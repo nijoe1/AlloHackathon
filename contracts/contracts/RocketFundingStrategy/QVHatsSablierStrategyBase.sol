@@ -374,8 +374,8 @@ abstract contract QVHatsSablierStrategyBase is BaseStrategy, Types {
             revert("Recipient has already been paid out on round one");
         }
 
-        if (!_isAcceptedRecipient(_recipientId) || amount == 0) {
-            revert("Recipient is not accepted or amount is 0");
+        if (!_isAcceptedRecipient(_recipientId)) {
+            revert("Recipient is not accepted");
         }
 
         LockupLinear.CreateWithDurations memory params = LockupLinear.CreateWithDurations({
@@ -527,23 +527,28 @@ abstract contract QVHatsSablierStrategyBase is BaseStrategy, Types {
         bytes memory
     ) internal view virtual override returns (PayoutSummary memory) {
         Recipient memory recipient = recipients[_recipientId];
-
-        // Calculate the payout amount based on the percentage of total votes received
-        // But also count the amount based on the roundOnePercentage if the recipient has not been paid out yet
         uint256 amount;
-        if (recipient.paidOut == PaidStatus.None && totalRecipientVotes != 0) {
-            amount = (poolAmount * recipient.totalVotesReceived) / totalRecipientVotes;
-            amount = (amount * roundOnePercentage) / 100;
-        }
-        // If the recipient has been paid out in round one, then calculate
-        //  the payout amount based on the percentage of total votes received
-        if (recipient.paidOut == PaidStatus.PaidStream && totalRecipientVotes != 0) {
-            uint256 roundTwoPercentage = 100 - roundOnePercentage;
 
-            amount = (poolAmount * recipient.totalVotesReceived) / totalRecipientVotes;
-            amount = (amount * roundTwoPercentage) / 100;
+        if (totalRecipientVotes != 0) {
+            uint256 recipientShare = (poolAmount * recipient.totalVotesReceived) / totalRecipientVotes;
+            
+            if (recipient.paidOut == PaidStatus.None) {
+                // Calculate payout for Round One
+                uint256 roundOneAmount = (recipientShare * roundOnePercentage) / 100;
+                amount = min(roundOneAmount, recipientShare);  // Ensure it doesn't exceed recipientShare
+            } else if (recipient.paidOut == PaidStatus.PaidStream) {
+                // Calculate payout for Round Two
+                uint256 roundTwoPercentage = 100 - roundOnePercentage;
+                uint256 roundTwoAmount = (recipientShare * roundTwoPercentage) / 100;
+                amount = min(roundTwoAmount, recipientShare - roundTwoAmount);  // Cap to remaining share
+            }
         }
         return PayoutSummary(_recipientId, amount);
+    }
+
+    // Utility function to return the minimum of two values
+    function min(uint256 a, uint256 b) private pure returns (uint256) {
+        return a < b ? a : b;
     }
 
     /// ================================

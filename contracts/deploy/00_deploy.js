@@ -38,10 +38,10 @@ module.exports = async ({ deployments }) => {
     })
 
     // // Verify the contract
-    // await hre.run("verify:verify", {
-    //     address: HackRegistry.address,
-    //     constructorArguments: registryParams,
-    // })
+    await hre.run("verify:verify", {
+        address: RocketFundingRegistry.address,
+        constructorArguments: registryParams,
+    })
 
     console.log("RocketFundingRegistry:", RocketFundingRegistry.address)
 
@@ -68,10 +68,10 @@ module.exports = async ({ deployments }) => {
     })
 
     // Verify the contract
-    // await hre.run("verify:verify", {
-    //     address: QVHatsSablierStrategy.address,
-    //     constructorArguments: StrategyParams,
-    // })
+    await hre.run("verify:verify", {
+        address: QVHatsSablierStrategy.address,
+        constructorArguments: StrategyParams,
+    })
 
     console.log("QVHatsSablierStrategy:", QVHatsSablierStrategy.address)
 

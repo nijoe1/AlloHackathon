@@ -124,7 +124,7 @@ const RegistrationModal = ({ isOpen, onClose, onSubmit, poolID }) => {
   const handleSubmit = async () => {
     onSubmit(formData);
     if (!formData.projectName) {
-      toast({ title: "Please fill in all fields", status: "warning" });
+      toast({ title: "Please fill in all fields", status: "error" });
       return;
     }
 

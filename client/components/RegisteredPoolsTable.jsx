@@ -25,7 +25,7 @@ import { encodeFunctionData } from "viem";
 import { formatCurrency, filterStreamsByRecipient } from "@/utils/utils";
 import { getRecipientStreams } from "@/utils/graphFunctions";
 import Loading from "@/components/Animation/Loading";
-
+import { useRouter } from "next/router";
 const PoolsTable = ({
   pools,
   profileID,
@@ -35,6 +35,7 @@ const PoolsTable = ({
   Access,
 }) => {
   const toast = useToast();
+  const router = useRouter();
   const { address: account } = useAccount();
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
@@ -68,14 +69,14 @@ const PoolsTable = ({
   // Function to calculate the current amount in an active stream
   const calculateCurrentAmount = useCallback(
     (stream) => {
-      if (currentTime > stream.endTime) {
+      if (currentTime > stream?.endTime) {
         return stream.depositAmount;
       }
-      const elapsedTime = currentTime - BigInt(stream.startTime);
-      const rate = stream.depositAmount / stream.duration;
+      const elapsedTime = currentTime - BigInt(stream?.startTime);
+      const rate = stream?.depositAmount / stream?.duration;
       return BigInt(elapsedTime) * BigInt(rate);
     },
-    [currentTime]
+    [streamInfo, currentTime]
   );
 
   const HandleWithdrawStream = async (streamID) => {
@@ -247,6 +248,7 @@ const PoolsTable = ({
                         .filter((dist) => dist.streamID !== "0")
                         .map((dist, index) => {
                           const stream = streamInfo.get(dist.streamID);
+                          console.log(stream)
                           return (
                             <div className="flex flex-col items-center">
                               <Text key={index}>

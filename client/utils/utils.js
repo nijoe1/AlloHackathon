@@ -279,7 +279,7 @@ export const processPoolStateAndRemainingTime = (pool, currentTime) => {
         BigInt(pool.poolDetails.PWDs) +
         BigInt(pool.poolDetails.PRDs)
     );
-  } else if (!IsSecondDistributionDone(pool.registeredRecipients)) {
+  } else if (IsSecondDistributionDone(pool.registeredRecipients)) {
     poolState = "WaitingForFinalDistribution";
     remainingTime = "";
     // Assuming no time limit for this state, or set a specific end time if applicable
@@ -293,7 +293,7 @@ export const processPoolStateAndRemainingTime = (pool, currentTime) => {
 };
 
 function IsSecondDistributionDone(recipients) {
-  if (!recipients.distributions) return false;
+  if (!recipients?.distributions) return false;
   for (const recipient of recipients) {
     const secondDistribution = recipient.distributions.find(
       (distribution) => distribution.streamID === "0"

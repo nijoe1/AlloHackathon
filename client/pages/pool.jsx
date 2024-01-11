@@ -236,6 +236,10 @@ const Pool = () => {
         addressArray.push(recipient.recipientAddress);
     });
 
+    if (addressArray.length == 0) {
+      return;
+    }
+
     try {
       const data = await publicClient?.simulateContract({
         account,
@@ -255,12 +259,9 @@ const Pool = () => {
       const transaction = await publicClient.waitForTransactionReceipt({
         hash: hash,
       });
-      let distributionRound =
-        pool.poolState == "WaitingForStreamDistribution"
-          ? "Initiated the RoundOne Streams Distribution"
-          : "Initiated the RoundTwo FinalDistribution";
+
       toast({
-        title: "You Successfully" + distributionRound,
+        title: "You Successfully Distributed the funds",
         status: "success",
         colorScheme: "blue",
       });
@@ -272,7 +273,7 @@ const Pool = () => {
       console.log(error);
       toast({
         title: "Distribution failed only admin can distribute",
-        status: "erorr",
+        status: "warning",
       });
       return false;
     }
@@ -369,18 +370,12 @@ const Pool = () => {
               borderRadius="lg"
               boxShadow="md"
             >
-              <Badge
-                colorScheme={
-                  Access === "ADMIN"
-                    ? "red"
-                    : Access === "MANAGER"
-                      ? "purple"
-                      : "blue"
-                }
-                mb={5}
-              >
-                {`You are wearing the ${Access} Hat`}
-              </Badge>
+              {Access && (
+                <Badge colorScheme={Access === "ADMIN" ? "red" : "blue"} mb={5}>
+                  {" "}
+                  {`You are wearing the ${Access} Hat`}
+                </Badge>
+              )}
 
               <AspectRatio ratio={1} w="150px" mb={4}>
                 <Image
@@ -416,11 +411,11 @@ const Pool = () => {
 
               <Badge
                 colorScheme={
-                  pool.poolState === "RegistrationPeriod" ? "green" : "red"
+                  pool?.poolState === "RegistrationPeriod" ? "green" : "red"
                 }
                 mb={4}
               >
-                {pool.poolState} {pool.remainingTime}
+                {pool?.poolState || "ENDED"} {pool?.remainingTime || "0"}
               </Badge>
 
               <Flex
@@ -436,7 +431,7 @@ const Pool = () => {
                 >
                   <div className="flex flex-col items-center border border-gray-300 border-1 p-2 rounded">
                     <Text>ROD</Text>
-                    <Text>{pool.poolDetails?.ROP}%</Text>
+                    <Text>{pool.poolDetails?.ROP || 50}%</Text>
                   </div>
                 </Tooltip>
                 <div className="flex flex-col items-center border border-gray-300 border-1 p-2 rounded">
@@ -446,7 +441,7 @@ const Pool = () => {
                 <Tooltip placement="top" label="Projects Working Duration">
                   <div className="flex flex-col items-center border border-gray-300 border-1 p-2 rounded">
                     <Text>PWD </Text>
-                    <Text>{formatDuration(pool.poolDetails?.PWDs)}</Text>
+                    <Text>{formatDuration(pool.poolDetails?.PWDs || 1)}</Text>
                   </div>
                 </Tooltip>
                 <Tooltip
@@ -455,7 +450,7 @@ const Pool = () => {
                 >
                   <div className="flex flex-col items-center border border-gray-300 border-1 p-2 rounded">
                     <Text>Threshold </Text>
-                    <Text>{pool.poolDetails?.threshold}</Text>
+                    <Text>{pool.poolDetails?.threshold || 1}</Text>
                   </div>
                 </Tooltip>
               </Flex>
@@ -494,8 +489,12 @@ const Pool = () => {
                 (pool.poolState == "RegistrationPeriod" ||
                   pool.poolState == "AllocationPeriod" ||
                   pool.poolState == "ProjectsRoundTwoEvaluation") && (
-                  <Box mx="10%" my={3} className="flex flex-col items-center">
-                    <Text fontSize="l" fontWeight="bold" color={"gray.100"}>
+                  <Box
+                    mx="10%"
+                    my={3}
+                    className="flex flex-col items-center text-gray-300"
+                  >
+                    <Text fontSize="l" fontWeight="bold">
                       {pool.poolState == "RegistrationPeriod"
                         ? "Review Projects"
                         : pool.poolState == "AllocationPeriod"
@@ -609,7 +608,9 @@ const Pool = () => {
                             </Td>
                             <Td border="1px" borderColor="gray.300">
                               <Flex align="center" mx={"23%"}>
-                                <Text>{recipient.name}</Text>
+                                <Text>
+                                  {recipient.name ? recipient.name : ""}
+                                </Text>
                                 <ChakraLink
                                   as={Button}
                                   onClick={() => {
@@ -628,15 +629,15 @@ const Pool = () => {
                             <Td border="1px" borderColor="gray.300">
                               <Badge
                                 colorScheme={
-                                  recipient.reviewStatusRoundOne === "Accepted"
+                                  recipient?.reviewStatusRoundOne === "Accepted"
                                     ? "green"
-                                    : recipient.reviewStatusRoundOne ===
+                                    : recipient?.reviewStatusRoundOne ===
                                         "Rejected"
                                       ? "red"
-                                      : "yellow"
+                                      : "yellow" || "yellow"
                                 }
                               >
-                                {recipient.reviewStatusRoundOne}
+                                {recipient?.reviewStatusRoundOne}
                               </Badge>
                             </Td>
 

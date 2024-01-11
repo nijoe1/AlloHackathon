@@ -229,7 +229,10 @@ const Pool = () => {
   const Distribute = async () => {
     let addressArray = [];
     recipients.map((recipient, index) => {
-      if (recipient.reviewStatusRoundOne == "Accepted")
+      if (
+        recipient.reviewStatusRoundOne == "Accepted" &&
+        recipient.isCanceledRoundTwo == "false"
+      )
         addressArray.push(recipient.recipientAddress);
     });
 

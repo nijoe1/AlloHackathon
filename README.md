@@ -72,10 +72,22 @@ By integrating these technologies, RocketFunding ensures that committee funds ar
 
 ### Contracts🕸️
 
-#### Check them out into the contracts folder
+#### Check them out into the contracts folder💎
 
 - verified contract QVHatsSablierStrategy on Arbiscan.
   https://sepolia.arbiscan.io/address/0x2DA8DD276978BF8Af06314330D14699D326A5C44#code
 
 - verified contract RocketFundingRegistry on Arbiscan.
   https://sepolia.arbiscan.io/address/0x5167ee4Fbb7B04aaA7F5773c96AbFf52C40fb638#code
+
+
+### Outcome from the hackathon🔮
+
+- Creation of a unique Allo strategy combining Novel Protocols
+- A fully working platform running on Arbitrum Sepolia.
+- Deployment of the Hats protocol and theGraph on arbitrum sepolia
+- Delpoyment of the Sablier theGraph on arbitrum sepolia
+
+### Next Steps🧑‍💻
+
+**Continue building the platform making it more robust and keep improving the contracts**

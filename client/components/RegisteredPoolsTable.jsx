@@ -233,12 +233,14 @@ const PoolsTable = ({
                       </Link>
                     </Td>
                     <Td>
-                      {pool.poolDetails.reviewStatusRoundOne == "Accepted" &&
-                      pool.poolDetails.isCanceledRoundTwo != "true"
-                        ? "Accepted"
-                        : pool.poolDetails.reviewStatusRoundOne != "Accepted"
-                          ? "Rejected"
-                          : "CancelledRoundTwo"}
+                      {pool.poolDetails.reviewStatusRoundOne == "Pending"
+                        ? "Pending"
+                        : pool.poolDetails.reviewStatusRoundOne == "Accepted" &&
+                            pool.poolDetails.isCanceledRoundTwo != "true"
+                          ? "Accepted"
+                          : pool.poolDetails.reviewStatusRoundOne != "Accepted"
+                            ? "Rejected"
+                            : "CancelledRoundTwo"}
                     </Td>
                     <Td>
                       {pool.distributions

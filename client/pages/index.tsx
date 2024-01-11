@@ -29,7 +29,7 @@ export default function Home() {
                     "_blank",
                   )
                 }
-                className="mt-5 bg-gradient-to-r from-indigo-200 to bg-indigo-500 hover:from-indigo-500 hover:to-indigo-200 text-white font-bold py-2 px-4 rounded-full"
+                className="mt-5 bg-gradient-to-r from-gray-100 to bg-gray-500 hover:from-gray-500 hover:to-gray-200 text-gray-800 font-bold py-2 px-4 rounded-full"
               >
                 Source Code
               </button>
@@ -41,7 +41,7 @@ export default function Home() {
           </div>
 
           {/* Powered By Section */}
-          <div className="mt-40 flex flex-col items-center text-center rounded-xl">
+          <div className="mt-20 flex flex-col items-center text-center rounded-xl">
             <h2 className="text-2xl font-bold mb-5 text-bolder text-gray-100">
               Powered By
             </h2>

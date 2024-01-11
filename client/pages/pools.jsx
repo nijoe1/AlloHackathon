@@ -109,8 +109,8 @@ const Pools = () => {
             templateColumns="repeat(auto-fill, minmax(250px, 1fr))"
             gap={6}
             px={4}
-            mx={"20%"}
-            mb={"4%"}
+            mx="20%"
+            mb="4%"
           >
             {activePools.map((pool, index) => (
               <VStack
@@ -118,7 +118,6 @@ const Pools = () => {
                 bg="white"
                 boxShadow="lg"
                 p={5}
-                content="center"
                 rounded="lg"
                 spacing={4}
                 align="stretch"
@@ -127,9 +126,10 @@ const Pools = () => {
                 _hover={{ transform: "scale(1.02)", boxShadow: "2xl" }}
               >
                 <Text fontWeight="bold" fontSize="xl" textAlign="center">
-                  {pool.metadata.name ? pool.metadata.name : "Pool Name"}
+                  {pool.metadata.name || "Pool Name"}
                 </Text>
-                <AspectRatio ratio={4 / 3} borderRadius="lg" overflow="hidden">
+
+                <AspectRatio ratio={4 / 3} borderRadius="lg">
                   <Image
                     src={`data:image/png;base64,${pool.metadata.image}`}
                     alt={pool.metadata.name}
@@ -138,17 +138,16 @@ const Pools = () => {
                 </AspectRatio>
 
                 <Text
-                  p={3}
+                  p={7}
                   mt={3}
-                  mb={2}
                   bg="gray.100"
                   rounded="md"
                   borderTop="1px"
-                  borderColor={"gray.300"}
+                  borderColor="gray.300"
                   fontSize="sm"
                   color="gray.700"
                   noOfLines={3}
-                  overflowY={"scroll"}
+                  overflowY="scroll"
                 >
                   {pool.metadata.description}
                 </Text>
@@ -163,57 +162,18 @@ const Pools = () => {
                         : "yellow"
                   }
                 >
-                  {pool.poolState + " " + pool.remainingTime}
+                  {`${pool.poolState} ${pool.remainingTime}`}
                 </Badge>
 
-                <Box w="full">
-                  <Flex
-                    className="flex items-center text-center"
-                    direction="row"
-                    gap={2}
-                    mb={4}
-                  >
-                    <Tooltip
-                      placement="top"
-                      label="Round One Distribution Percentage"
-                    >
-                      <div className="flex flex-col items-center border border-gray-300 border-1 p-2 rounded">
-                        <Text>ROD</Text>
-                        <Text>{pool.poolDetails?.ROP}%</Text>
-                      </div>
-                    </Tooltip>
-                    <div className="flex flex-col items-center border border-gray-300 border-1 p-2 rounded">
-                      <Text>amount </Text>
-                      <Text>{pool.poolAmount}DAI</Text>
-                    </div>
-                    <Tooltip placement="top" label="Projects Working Duration">
-                      <div className="flex flex-col items-center border border-gray-300 border-1 p-2 rounded">
-                        <Text>PWD </Text>
-                        <Text>{formatDuration(pool.poolDetails?.PWDs)}</Text>
-                      </div>
-                    </Tooltip>
-                    <Tooltip
-                      placement="top"
-                      label="Voting Threshold is the amount of votes that someone needs to get accepted or rejected from the pool"
-                    >
-                      <div className="flex flex-col items-center border border-gray-300 border-1 p-2 rounded">
-                        <Text>Thres</Text>
-                        <Text>{pool.poolDetails?.threshold}</Text>
-                      </div>
-                    </Tooltip>
-                  </Flex>
-                </Box>
+                <Flex justify="space-between" w="full">
+                  {/* Information Boxes */}
+                  {renderInfoBoxes(pool)}
+                </Flex>
 
                 <Button
-                  mt={5}
                   colorScheme="blue"
                   w="full"
-                  onClick={() =>
-                    router.push({
-                      pathname: `/pool`,
-                      query: { poolID: pool.poolID },
-                    })
-                  }
+                  onClick={() => router.push(`/pool?poolID=${pool.poolID}`)}
                 >
                   View Pool
                 </Button>
@@ -231,3 +191,33 @@ const Pools = () => {
 };
 
 export default Pools;
+
+function renderInfoBoxes(pool) {
+  const infoData = [
+    {
+      label: "ROD",
+      value: `${pool.poolDetails?.ROP}%`,
+      tooltip: "Round One Distribution Percentage",
+    },
+    { label: "", value: `${pool.poolAmount} DAI`, tooltip: "Pool Amount" },
+    {
+      label: "PWD",
+      value: formatDuration(pool.poolDetails?.PWDs),
+      tooltip: "Projects Working Duration",
+    },
+    {
+      label: "Thres",
+      value: pool.poolDetails?.threshold,
+      tooltip: "Voting Threshold",
+    },
+  ];
+
+  return infoData.map((item, index) => (
+    <Tooltip key={index} label={item.tooltip} placement="top">
+      <Box className="flex flex-col items-center border border-gray-300 p-2 rounded">
+        <Text>{item.label}</Text>
+        <Text>{item.value}</Text>
+      </Box>
+    </Tooltip>
+  ));
+}

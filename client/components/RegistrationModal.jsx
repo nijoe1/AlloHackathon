@@ -124,7 +124,7 @@ const RegistrationModal = ({ isOpen, onClose, onSubmit, poolID }) => {
   const handleSubmit = async () => {
     onSubmit(formData);
     if (!formData.projectName) {
-      Toast({ title: "Please fill in all fields", status: "warning" });
+      toast({ title: "Please fill in all fields", status: "warning" });
       return;
     }
 
@@ -145,7 +145,7 @@ const RegistrationModal = ({ isOpen, onClose, onSubmit, poolID }) => {
 
       setIsUploading(false); // Stop uploading
 
-      Toast({
+      toast({
         title: "Profile Metadata Uploaded successfully",
         status: "success",
         colorScheme: "blue",
@@ -154,7 +154,7 @@ const RegistrationModal = ({ isOpen, onClose, onSubmit, poolID }) => {
       const res = await registerProfileInPool(metadataCid);
 
       if (!res) {
-        Toast({
+        toast({
           title: "Transaction rejected",
           status: "error",
         });
@@ -167,7 +167,7 @@ const RegistrationModal = ({ isOpen, onClose, onSubmit, poolID }) => {
 
       // Now you can proceed to use these CIDs as needed
     } catch (error) {
-      Toast({
+      toast({
         title: "Error Registring your Profile into the pool",
         status: "error",
       });

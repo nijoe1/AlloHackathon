@@ -245,7 +245,7 @@ export const getAllPoolsRegisteredByProfile = async (profileID) => {
 
   try {
     const response = await axios.get(
-      `${TablelandGateway}${encodeURIComponent(query)}`,
+      `${TablelandGateway}${encodeURIComponent(query)}`
     );
     return response.data;
   } catch (error) {
@@ -265,7 +265,7 @@ export const getProfileDetails = async (profileID) => {
       profile.profileID = '${profileID}'`;
   try {
     const response = await axios.get(
-      `${TablelandGateway}${encodeURIComponent(query)}`,
+      `${TablelandGateway}${encodeURIComponent(query)}`
     );
     return response.data;
   } catch (error) {
@@ -357,7 +357,7 @@ export const getProfilesData = async (profileIDs) => {
       `${TablelandGateway}${encodeURIComponent(query)}`,
       {
         params: profileIDs,
-      },
+      }
     );
     return response.data;
   } catch (error) {
@@ -367,8 +367,7 @@ export const getProfilesData = async (profileIDs) => {
 };
 
 export const getPool = async (poolID) => {
-  const query = `SELECT 
-  DISTINCT p.poolID,
+  const query = `SELECT p.poolID,
   json_object(
       'strategy', p.strategy,
       'votesPerAllocator', p.votesPerAllocator,

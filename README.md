@@ -2,7 +2,7 @@
 
 ### _"RocketFunding: Propelling your projects to success with transparent and efficient funding solutions."_ 🚀
 
-<img src="../AlloHackathon/client/public/RocketFunding.webp"/>
+<img src="https://github.com/nijoe1/AlloHackathon/blob/main/client/public/RocketFunding.webp"/>
 
 #### Submission project into the Allo on Arbitrum hackathon🧑‍🚀⚛
 

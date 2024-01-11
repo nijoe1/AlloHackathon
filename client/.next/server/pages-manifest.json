@@ -3,6 +3,6 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/userProfiles": "pages/userProfiles.js",
-  "/create": "pages/create.js",
-  "/profile": "pages/profile.js"
+  "/profile": "pages/profile.js",
+  "/pools": "pages/pools.js"
 }

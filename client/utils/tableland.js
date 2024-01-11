@@ -245,7 +245,7 @@ export const getAllPoolsRegisteredByProfile = async (profileID) => {
 
   try {
     const response = await axios.get(
-      `${TablelandGateway}${encodeURIComponent(query)}`
+      `${TablelandGateway}${encodeURIComponent(query)}`,
     );
     return response.data;
   } catch (error) {
@@ -265,7 +265,7 @@ export const getProfileDetails = async (profileID) => {
       profile.profileID = '${profileID}'`;
   try {
     const response = await axios.get(
-      `${TablelandGateway}${encodeURIComponent(query)}`
+      `${TablelandGateway}${encodeURIComponent(query)}`,
     );
     return response.data;
   } catch (error) {
@@ -301,10 +301,10 @@ export const getAllActivePools = async (time) => {
         ${tables.profilePools} AS pp_reg ON p.poolID = pp_reg.poolID
             JOIN 
         ${tables.profiles} AS profile ON pp_reg.profileID = profile.profileID
-            
+            WHERE
         pp_reg.isCreator = 'true'
         ORDER BY 
-            p.RETs DESC;`;
+            p.RETs DESC;`
 
   const fullUrl = `${TablelandGateway}${encodeURIComponent(query)}`;
 
@@ -357,7 +357,7 @@ export const getProfilesData = async (profileIDs) => {
       `${TablelandGateway}${encodeURIComponent(query)}`,
       {
         params: profileIDs,
-      }
+      },
     );
     return response.data;
   } catch (error) {

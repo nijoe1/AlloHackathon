@@ -1,9 +1,53 @@
 import React, { useEffect, useState } from "react";
-import { Avatar, Wrap, WrapItem } from "@chakra-ui/react";
+import { Avatar, Wrap, WrapItem, useToast } from "@chakra-ui/react";
 import Navbar from "@/components/navbar";
 import HeroAnimation from "@/components/Animation/HeroAnimation";
+import { DAI_ABI, DAI_ADDRESS } from "@/constants/DAI";
+import { useAccount, usePublicClient, useWalletClient } from "wagmi";
+
 export default function Home() {
   // useState and useEffect to fetch and set dynamic data
+  const publicClient = usePublicClient();
+  const { address: account } = useAccount();
+  const { data: walletClient } = useWalletClient();
+  const toast = useToast();
+  const mintDAI = async () => {
+    try {
+      const data = await publicClient?.simulateContract({
+        account,
+        address: DAI_ADDRESS,
+        abi: DAI_ABI,
+        // @ts-ignore
+        functionName: "mint",
+        args: [
+          account as `0x${string}`,
+          BigInt("1000000000000000000000000000"),
+        ],
+      });
+      console.log(data);
+      if (!walletClient) {
+        console.log("Wallet client not found");
+        return;
+      }
+      // @ts-ignore
+      const hash = await walletClient.writeContract(data.request);
+      console.log("Transaction Sent");
+      const transaction = await publicClient.waitForTransactionReceipt({
+        hash: hash,
+      });
+      toast({
+        title: "Minted 1000 DAI",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+      });
+      return true;
+      console.log(transaction);
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  };
 
   return (
     <div>
@@ -22,17 +66,25 @@ export default function Home() {
               </p>
             </div>
             <div className="flex flex-col items-center">
-              <button
-                onClick={() =>
-                  window.open(
-                    "https://github.com/nijoe1/AlloHackathon",
-                    "_blank",
-                  )
-                }
-                className="mt-5 bg-gradient-to-r from-gray-100 to bg-gray-500 hover:from-gray-500 hover:to-gray-200 text-gray-800 font-bold py-2 px-4 rounded-full"
-              >
-                Source Code
-              </button>
+              <div className="flex flex-wrap items-center">
+                <button
+                  onClick={() =>
+                    window.open(
+                      "https://github.com/nijoe1/AlloHackathon",
+                      "_blank"
+                    )
+                  }
+                  className="mt-5 bg-gradient-to-r from-gray-100 to bg-gray-500 hover:from-gray-500 hover:to-gray-200 text-gray-800 font-bold py-2 px-4 rounded-full"
+                >
+                  Source Code
+                </button>
+                <button
+                  onClick={() => mintDAI()}
+                  className="mt-5 bg-gradient-to-r from-gray-500 to bg-gray-100 hover:from-gray-100 hover:to-gray-500 text-gray-800 font-bold py-2 px-4 rounded-full"
+                >
+                  mint tDAI
+                </button>
+              </div>
             </div>
           </div>
           <div className="mt-30">

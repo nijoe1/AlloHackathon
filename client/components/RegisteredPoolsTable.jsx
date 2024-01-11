@@ -47,7 +47,7 @@ const PoolsTable = ({
       let Streams = await getRecipientStreams(anchorAddress.toLowerCase());
       const streamInfo = filterStreamsByRecipient(
         Streams.streams,
-        anchorAddress
+        anchorAddress,
       );
       setStreamInfo(streamInfo);
 
@@ -76,7 +76,7 @@ const PoolsTable = ({
       const rate = stream?.depositAmount / stream?.duration;
       return BigInt(elapsedTime) * BigInt(rate);
     },
-    [streamInfo, currentTime]
+    [streamInfo, currentTime],
   );
 
   const HandleWithdrawStream = async (streamID) => {
@@ -248,7 +248,7 @@ const PoolsTable = ({
                         .filter((dist) => dist.streamID !== "0")
                         .map((dist, index) => {
                           const stream = streamInfo.get(dist.streamID);
-                          console.log(stream)
+                          console.log(stream);
                           return (
                             <div className="flex flex-col items-center">
                               <Text key={index}>
@@ -259,7 +259,7 @@ const PoolsTable = ({
                               <Text key={index}>
                                 Withdrawn:{" "}
                                 {formatCurrency(
-                                  stream.depositAmount - stream.intactAmount
+                                  stream.depositAmount - stream.intactAmount,
                                 )}
                               </Text>
                             </div>

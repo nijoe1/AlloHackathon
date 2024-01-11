@@ -279,7 +279,7 @@ export const processPoolStateAndRemainingTime = (pool, currentTime) => {
         BigInt(pool.poolDetails.PWDs) +
         BigInt(pool.poolDetails.PRDs)
     );
-  } else if (IsSecondDistributionDone(pool.registeredRecipients)) {
+  } else if (!IsSecondDistributionDone(pool.registeredRecipients)) {
     poolState = "WaitingForFinalDistribution";
     remainingTime = "";
     // Assuming no time limit for this state, or set a specific end time if applicable
@@ -293,11 +293,12 @@ export const processPoolStateAndRemainingTime = (pool, currentTime) => {
 };
 
 function IsSecondDistributionDone(recipients) {
-  if (!recipients?.distributions) return false;
+  if (!recipients?.distributions) return true;
   for (const recipient of recipients) {
     const secondDistribution = recipient.distributions.find(
-      (distribution) => distribution.streamID === "0"
+      (distribution) => distribution.streamID == "0"
     );
+    if (recipient.distributions.length > 1) return false;
 
     if (secondDistribution) {
       return true; // Found a recipient with a second distribution with streamID "0"
@@ -371,7 +372,7 @@ export const calculateRemainingCreditsForAllocator = (
 
   if (!allocator) {
     console.error("Allocator not found");
-    return maxCredits;
+    return maxCredits - 1;
   }
 
   // Sum up the square roots of votesAmount to find total credits used

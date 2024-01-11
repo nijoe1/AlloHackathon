@@ -21,7 +21,6 @@ import ManageOrganizationTab from "./ManageOrganizationTab";
 import CreatePoolModal from "./CreatePoolModal";
 
 const ConfigureOrganizationModal = ({ profileID }) => {
-
   const StyledModalBody = chakra(ModalBody, {
     baseStyle: {
       overflowY: "auto",

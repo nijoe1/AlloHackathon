@@ -304,7 +304,7 @@ export const getAllActivePools = async (time) => {
             WHERE
         pp_reg.isCreator = 'true'
         ORDER BY 
-            p.RETs DESC;`
+            p.RETs DESC;`;
 
   const fullUrl = `${TablelandGateway}${encodeURIComponent(query)}`;
 

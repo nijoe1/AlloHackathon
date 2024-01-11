@@ -285,7 +285,7 @@ const Pool = () => {
     try {
       let pool = pools[0];
       let CID = pool.poolDetails.poolMetadata;
-      console.log(CID);
+      console.log(pool.poolDetails);
       const metadataResponse = await axios.get(`https://ipfs.io/ipfs/${CID}`);
       const metadata = metadataResponse.data;
       if (metadata.metadata) {
@@ -299,6 +299,7 @@ const Pool = () => {
       let res = processPoolStateAndRemainingTime(pool, time);
       poolState = res.poolState;
       remainingTime = res.remainingTime;
+
       let poolAmount1 = await publicClient.readContract({
         address: DAI_ADDRESS,
         abi: DAI_ABI,
@@ -592,7 +593,8 @@ const Pool = () => {
                     {recipients.map(
                       (recipient, index) =>
                         (recipient.reviewStatusRoundOne === "Accepted" ||
-                          recipient.reviewStatusRoundOne === "Pending") && (
+                          recipient.reviewStatusRoundOne === "Pending") &&
+                        recipient.isCanceledRoundTwo == "false" && (
                           <Tr key={index}>
                             <Td isNumeric borderColor="gray.300">
                               <Flex textAlign="center" ml={3}>

@@ -140,7 +140,7 @@ const OrganizationProfile = () => {
 
       const pools = await getAllPoolsCreatedByProfile(orgID);
       let creatorMetadata = await axios.get(
-        `https://ipfs.io/ipfs/${profile[0]?.metadata}`
+        `https://ipfs.io/ipfs/${profile[0]?.metadata}`,
       );
       setCreatorMetadata(creatorMetadata.data);
       const processedPools = await processPoolsWithMetadata(pools, time);
@@ -219,10 +219,10 @@ const OrganizationProfile = () => {
               mt={8}
             >
               <Badge colorScheme="green">{`Total Distributed: ${formatCurrency(
-                fundsInfo.fundsDistributed
+                fundsInfo.fundsDistributed,
               )}`}</Badge>
               <Badge colorScheme="blue">{`Total Received: ${formatCurrency(
-                fundsInfo.fundsReceived
+                fundsInfo.fundsReceived,
               )}`}</Badge>
             </Stack>
             {Access == "ADMIN" && (

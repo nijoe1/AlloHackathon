@@ -40,6 +40,10 @@ RocketFunding introduces a transparent, efficient, and trustless system for fund
 
 ---
 
+### Architecture & Flow of the Application✨
+
+---
+
 <details>
   <summary>Hats Usage Diagram</summary>
   
@@ -49,7 +53,14 @@ RocketFunding introduces a transparent, efficient, and trustless system for fund
 
 ---
 
-### Flow & Architecture of the Application✨
+<details>
+  <summary>Pool Rocket Strategy Workflow Diagram</summary>
+  
+  ### RocketFunding Stratefy Workflow
+  <img src="https://github.com/nijoe1/AlloHackathon/blob/main/client/public/PoolWorkFlow.png"/>
+</details>
+
+---
 
 - **Profile Creation:** Organizations create their profiles with a hierarchical access control system based on the Hats Protocol, where the admin can manage roles within the organization.
 - **Funding Pool Creation:** Pools function as impact evaluators, beginning with a registration period where applicants can apply.

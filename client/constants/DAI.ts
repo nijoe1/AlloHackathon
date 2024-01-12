@@ -385,6 +385,24 @@ export const DAI_ABI = [
     type: "event",
   },
   {
+    inputs: [
+      {
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "mint",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     anonymous: false,
     inputs: [
       {
